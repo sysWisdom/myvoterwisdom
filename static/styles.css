@@ -1,0 +1,63 @@
+/* General reset and box-sizing */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body and text styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* Header section */
+header {
+    background-color: #0099cc;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+}
+
+header h1 {
+    font-size: 36px;
+    margin-bottom: 10px;
+}
+
+header p {
+    font-size: 18px;
+}
+
+/* Forecast section */
+.forecast {
+    padding: 20px;
+    background-color: #fff;
+    margin: 20px auto;
+    max-width: 800px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.forecast h2 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+.forecast-details p {
+    font-size: 20px;
+    margin: 10px 0;
+}
+
+/* Footer */
+.footer {
+    background-color: #0099cc;
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+}
+
+.footer p {
+    font-size: 16px;
+}

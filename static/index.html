@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Prediction Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #0099cc;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+        header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 18px;
+        }
+        .report {
+            padding: 20px;
+            background-color: #fff;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .report h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        .report-details p {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        .footer {
+            background-color: #0099cc;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+        }
+        .footer p {
+            font-size: 16px;
+        }
+        .highlight {
+            font-weight: bold;
+        }
+        .explanation {
+            padding: 20px;
+            background-color: #fff;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .explanation h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+        .explanation p {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Election Prediction Report</h1>
+        <p>Predictions and analysis for the 2028 election in Orange County, CA</p>
+    </header>
+
+    <!-- Dropdowns for selecting state and county -->
+    <div>
+        <label for="stateSelect">Select State:</label>
+        <select id="stateSelect">
+            <!-- Options will be populated dynamically -->
+        </select>
+    </div>
+    <div>
+        <label for="countySelect">Select County:</label>
+        <select id="countySelect" disabled>
+            <!-- Options will be populated dynamically -->
+        </select>
+    </div>
+    <button id="fetchPrediction" disabled>Get Prediction</button>
+
+    <div class="report">
+        <h2>2028 Election Prediction</h2>
+        <div class="report-details">
+            <p id="prediction"></p>
+        </div>
+    </div>
+    <div class="explanation">
+        <h2>What is this about?</h2>
+        <p>Imagine you're a teacher grading a student's answers to a test. This report is like the grading system for a computer program that tried to guess the correct answers to a set of questions.</p>
+        <h2>What do the numbers mean?</h2>
+        <p><strong>Precision:</strong> How many of the answers the computer guessed correctly out of all the answers it gave? (Think of it like the percentage of correct answers it actually got right from what it claimed was right.)</p>
+        <p><strong>Recall:</strong> Out of all the correct answers that existed, how many did the computer find? (Like finding all your missing socks – did the computer find them all or just a few?)</p>
+        <p><strong>F1-Score:</strong> A balance between precision and recall. If precision is like accuracy and recall is like effort, the F1-score shows how well they worked together.</p>
+        <p><strong>Support:</strong> How many questions were in each group or category that the computer was grading.</p>
+    </div>
+    <div class="report">
+        <h2>Classification Reports</h2>
+        <div class="report-details" id="classification-reports"></div>
+    </div>
+    <div class="footer">
+        <p>&copy; 2025 SysWisdom.AI</p>
+    </div>
+    <div id="donate-button-container">
+        <div id="donate-button"></div>
+        <script src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js" charset="UTF-8"></script>
+        <script>
+        PayPal.Donation.Button({
+        env:'production',
+        hosted_button_id:'29RQA3MYT53HC',
+        image: {
+        src:'https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif',
+        alt:'Donate with PayPal button',
+        title:'PayPal - The safer, easier way to pay online!',
+        }
+        }).render('#donate-button');
+        </script>
+    </div>        
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stateSelect = document.getElementById('stateSelect');
+            const countySelect = document.getElementById('countySelect');
+            const fetchPredictionButton = document.getElementById('fetchPrediction');
+
+            // Fetch and populate state options
+            fetch('data/state.json') // Replace with the actual path to your states data
+                .then(response => response.json())
+                .then(states => {
+                    console.log("States fetched:", states); // Debugging: Log the fetched states
+                    states.forEach(state => {
+                        const option = document.createElement('option');
+                        option.value = state;
+                        option.textContent = state;
+                        stateSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error("Error fetching states:", error); // Debugging: Log any errors
+                });
+
+            // Event listener for state selection
+            stateSelect.addEventListener('change', () => {
+                const selectedState = stateSelect.value;
+                countySelect.innerHTML = ''; // Clear previous options
+                countySelect.disabled = true;
+                fetchPredictionButton.disabled = false;
+
+                // Fetch and populate county options based on selected state
+                fetch('data/county.json') // Replace with the actual path to your counties data
+                    .then(response => response.json())
+                    .then(countiesByState => {
+                        console.log("Counties fetched for state:", countiesByState); // Debugging: Log the fetched counties
+                        const counties = countiesByState[selectedState] || [];
+                        counties.forEach(county => {
+                            const option = document.createElement('option');
+                            option.value = county;
+                            option.textContent = county;
+                            countySelect.appendChild(option);
+                        });
+                        countySelect.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error("Error fetching counties:", error); // Debugging: Log any errors
+                    });
+            });
+
+            // Event listener for county selection
+            countySelect.addEventListener('change', () => {
+                fetchPredictionButton.disabled = countySelect.value === '';
+            });
+
+            // Event listener for fetching prediction
+            fetchPredictionButton.addEventListener('click', () => {
+                const selectedState = stateSelect.value;
+                const selectedCounty = countySelect.value;
+                console.log(`Fetching prediction for state: ${selectedState}, county: ${selectedCounty}`); // Debugging: Log the selected values
+                fetchPrediction(selectedState, selectedCounty);
+            });
+
+            function fetchPrediction(state, county) {
+                fetch(`/predict?state=${state}&county=${county}`) // Call the Flask backend
+                    .then(response => response.json())
+                    .then(data => {
+                        const classificationReports = document.getElementById('classification-reports');
+                        classificationReports.innerHTML = ''; // Clear previous reports
+
+                        if (data.message) {
+                            // Display the message if the data contains only one class
+                            document.getElementById('prediction').innerHTML = data.message;
+                            return;
+                        }
+
+                        const models = ['Random Forest', 'Logistic Regression', 'SVM', 'Gradient Boosting'];
+
+                        models.forEach(model => {
+                            const report = data.classification_reports[model];
+                            const modelDiv = document.createElement('div');
+                            modelDiv.innerHTML = `
+                                <h1>Classification Report: ${model}</h1>
+                                <div class="report">
+                                    <p><span class="highlight">Group 0:</span> Precision: ${report['0'] ? (report['0'].precision * 100).toFixed(2) + '%' : 'N/A'}, Recall: ${report['0'] ? (report['0'].recall * 100).toFixed(2) + '%' : 'N/A'}, F1-score: ${report['0'] ? (report['0']['f1-score'] * 100).toFixed(2) + '%' : 'N/A'}</p>
+                                    <p><span class="highlight">Group 1:</span></p>
+                                    <ul>
+                                        <li>Precision: ${(report['1'].precision * 100).toFixed(2)}%</li>
+                                        <li>Recall: ${(report['1'].recall * 100).toFixed(2)}%</li>
+                                        <li>F1-score: ${(report['1']['f1-score'] * 100).toFixed(2)}%</li>
+                                    </ul>
+                                    <h3>Overall Performance:</h3>
+                                    <ul>
+                                        <li><span class="highlight">Accuracy:</span> ${(report.accuracy * 100).toFixed(2)}%</li>
+                                        <li><span class="highlight">Macro Average:</span>
+                                            <ul>
+                                                <li>Precision: ${(report['macro avg'].precision * 100).toFixed(2)}%</li>
+                                                <li>Recall: ${(report['macro avg'].recall * 100).toFixed(2)}%</li>
+                                                <li>F1-score: ${(report['macro avg']['f1-score'] * 100).toFixed(2)}%</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            `;
+                            classificationReports.appendChild(modelDiv);
+                        });
+
+                        let predictionText = '';
+                        const randomForestPrediction = data.predictions['Random Forest'][0] === 1 ? 'Democratic' : 'Republican';
+                        predictionText += `For ${county}, ${state}, the Random Forest model predicts a ${randomForestPrediction} win in 2028.<br>`;
+
+                        const firstPredictions = Object.keys(data.predictions).map(model => data.predictions[model][0]);
+                        const democraticWins = firstPredictions.filter(pred => pred === 1).length;
+                        const republicanWins = firstPredictions.filter(pred => pred === 0).length;
+
+                        if (democraticWins >= republicanWins) {
+                            predictionText += 'The majority of models predict a Democratic win in 2028.';
+                        } else {
+                            predictionText += 'The majority of models predict a Republican win in 2028.';
+                        }
+
+                        document.getElementById('prediction').innerHTML = predictionText;
+                    })
+                    .catch(error => console.error('Error loading results:', error));
+            }
+
+            // Fetch the results.json file and display the likely winner and probability
+            fetch('results.json')
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('prediction');
+
+                    // Create and append the message paragraph
+                    const message = document.createElement('p');
+                    message.textContent = data.message;
+                    resultsDiv.appendChild(message);
+
+                    // Check if likely_winner and likely_winner_prob are present
+                    if (data.likely_winner && data.likely_winner_prob !== undefined) {
+                        // Create and append the likely winner paragraph
+                        const winner = document.createElement('p');
+                        winner.textContent = `Likely Winner: ${data.likely_winner}`;
+                        resultsDiv.appendChild(winner);
+
+                        // Create and append the likely winner probability paragraph
+                        const winnerProb = document.createElement('p');
+                        winnerProb.textContent = `Likely Winner Probability: ${data.likely_winner_prob.toFixed(2)}%`;
+                        resultsDiv.appendChild(winnerProb);
+                    }
+                })
+                .catch(error => console.error('Error fetching results:', error));
+        });
+    </script>
+</body>
+</html>

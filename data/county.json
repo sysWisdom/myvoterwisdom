@@ -1,0 +1,73 @@
+{
+    "AL": [
+        "Montgomery County",
+        "Marengo County"
+    ],
+    "AZ": [
+        "Maricopa County"
+    ],
+    "CA": [
+        "Orange County",
+        "San Diego County"
+    ],
+    "CO": [
+        "Denver County"
+    ],
+    "DE": [
+        "New Castle County",
+        "Kent County",
+        "Sussex County"
+    ],
+    "FL": [
+        "Miami-Dade County"
+    ],
+    "GA": [
+        "Fulton County",
+        "Cherokee"
+    ],
+    "HI": [
+        "Hawai'i County",
+        "Maui County",
+        "Kaua'i County",
+        "Honolulu County"
+    ],
+    "ID": [
+        "Idaho County"
+    ],
+    "IL": [
+        "Cook County"
+    ],
+    "KS": [
+        "Johnson County",
+        "Sedgwick County",
+        "Shawnee County",
+        "Wyandotte County"
+    ],
+    "MI": [
+        "Wayne County"
+    ],
+    "NC": [
+        "Mecklenburg County"
+    ],
+    "NV": [
+        "Clark County"
+    ],
+    "NY": [
+        "New York County"
+    ],
+    "OH": [
+        "Cuyahoga County"
+    ],
+    "PA": [
+        "Philadelphia County"
+    ],
+    "TX": [
+        "Harris County"
+    ],
+    "WA": [
+        "King County"
+    ],
+    "WI": [
+        "Milwaukee County"
+    ]
+}

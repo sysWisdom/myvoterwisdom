@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" style="font-family: Arial, sans-serif;">
+  <!-- Soft Background -->
+  <rect width="800" height="600" fill="#f9f9f9"/>
+  
+  <!-- Title with Subtle Styling -->
+  <text x="400" y="50" text-anchor="middle" font-size="26" font-weight="bold" fill="#2c3e50">
+    Cherokee County Voter Trends 2004-2024
+  </text>
+  
+  <!-- Subtle Grid Lines -->
+  <g stroke="#e0e0e0" stroke-dasharray="5,5">
+    <line x1="50" y1="150" x2="750" y2="150" />
+    <line x1="50" y1="350" x2="750" y2="350" />
+    <line x1="50" y1="550" x2="750" y2="550" />
+  </g>
+  
+  <!-- Registered Voters Comparison -->
+  <g>
+    <text x="100" y="100" font-size="18" fill="#34495e">Registered Voters</text>
+    
+    <!-- 2004 Column -->
+    <rect x="100" y="150" width="150" height="200" 
+          fill="#3498db" fill-opacity="0.2" 
+          stroke="#3498db" stroke-width="2"/>
+    <rect x="100" y="270" width="150" height="80" 
+          fill="#3498db"/>
+    <text x="175" y="320" text-anchor="middle" fill="#2c3e50" font-size="12">
+      2004: 103,028
+    </text>
+    <text x="175" y="340" text-anchor="middle" fill="#2c3e50" font-size="12">
+      (71.56% Participation)
+    </text>
+  </g>
+  
+  <!-- 2024 Column -->
+  <g>
+    <rect x="300" y="150" width="150" height="200" 
+          fill="#e74c3c" fill-opacity="0.2" 
+          stroke="#e74c3c" stroke-width="2"/>
+    <rect x="300" y="170" width="150" height="180" 
+          fill="#e74c3c"/>
+    <text x="375" y="320" text-anchor="middle" fill="#2c3e50" font-size="12">
+      2024: 201,633
+    </text>
+    <text x="375" y="340" text-anchor="middle" fill="#2c3e50" font-size="12">
+      (81.05% Participation)
+    </text>
+  </g>
+  
+  <!-- Venn Diagram instead of Pie Chart -->
+  <g transform="translate(600, 250)">
+    <text x="-100" y="-130" font-size="18" fill="#34495e">2024 Votes Composition</text>
+    
+    <!-- Main circle representing 100% eligible voters -->
+    <circle cx="0" cy="0" r="100" fill="#f1f1f1" stroke="#d3d3d3" stroke-width="2"/>
+    
+    <!-- Circle representing Republican voters (69.8% of voters) -->
+    <circle cx="-30" cy="0" r="80" fill="#a51d1d" fill-opacity="0.8" stroke="#ffffff" stroke-width="2"/>
+    
+    <!-- Circle representing Democratic voters (30.2% of voters) -->
+    <circle cx="50" cy="0" r="50" fill="#1256a3" fill-opacity="0.8" stroke="#ffffff" stroke-width="2"/>
+    
+    <!-- Composition Labels -->
+    <rect x="-90" y="140" width="20" height="20" fill="#1256a3"/>
+    <text x="30" y="155" text-anchor="middle" fill="#2c3e50" font-size="14">
+      Republican: 112,142 (69.8%)
+    </text>
+    <rect x="-90" y="160" width="20" height="20" fill="#a51d1d"/>
+    <text x="25" y="175" text-anchor="middle" fill="#2c3e50" font-size="14">
+      Democratic: 48,838 (30.2%)
+    </text>
+    <text x="0" y="195" text-anchor="middle" fill="#2c3e50" font-size="14">
+      Non-Voters: 38,188 (18.9%)
+    </text>
+  </g>
+  
+  <!-- Footer with Attribution -->
+  <text x="400" y="580" text-anchor="middle" font-size="12" fill="#7f8c8d">
+    Source: myvoterwisdom.com | Data from Georgia Secretary of State
+  </text>
+</svg>
