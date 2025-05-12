@@ -23,7 +23,8 @@
     ],
     "GA": [
         "Fulton County",
-        "Cherokee"
+        "Cherokee",
+        "Bibb County"
     ],
     "HI": [
         "Hawai'i County",
@@ -58,8 +59,14 @@
     "OH": [
         "Cuyahoga County"
     ],
+    "OR": [
+        "Kalamath County"
+    ],
     "PA": [
         "Philadelphia County"
+    ],
+    "TN": [
+        "Shelby County"
     ],
     "TX": [
         "Harris County"
