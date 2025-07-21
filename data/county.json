@@ -1,4 +1,7 @@
 {
+    "AK": [
+        "House District 40"
+    ],
     "AL": [
         "Montgomery County",
         "Marengo County"
@@ -46,6 +49,9 @@
     ],
     "MI": [
         "Wayne County"
+    ],
+    "MT": [
+        "Glacier County"
     ],
     "NC": [
         "Mecklenburg County"
