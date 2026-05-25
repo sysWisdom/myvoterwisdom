@@ -33,6 +33,9 @@ model/
 *.pkl
 *.joblib
 
+# MEDSL source data — downloaded manually, not committed (9.8 MB tab file)
+data/medsl/
+
 # CSV files — block accidental commits of generated/temp CSVs
 *.csv
 # Re-allow curated data files in data/ — these are tracked and
