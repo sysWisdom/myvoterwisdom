@@ -498,39 +498,89 @@ Phase 7 goal:    aggregate county predictions → state winner → Electoral Col
 
 ### Tier 3 — Fast Operational Dataset
 
-> **US County Level Election Results 2008–2024**
-> Pre-normalized county-level presidential results in ready-to-ingest CSV format.
+> **tonmcg / US_County_Level_Election_Results_08-24**
+> URL: https://github.com/tonmcg/US_County_Level_Election_Results_08-24
+> Author: Tony McGovern
+> License: **MIT** — free to use, modify, and redistribute without restriction
+> DOI: https://doi.org/10.5281/zenodo.14223604
+> Coverage: 2008 · 2012 · 2016 · 2020 · 2024 presidential elections
+> Version: v2.0.0 (released 2025-01-17) · 420 ★ · 333 forks
+
+**Data sources per election year (from README):**
+
+| Year | Source |
+|---|---|
+| 2008 | Compiled by Bill Morris |
+| 2012 | The Guardian data blog Excel export |
+| 2016 | Scraped from Townhall.com |
+| 2020 | Scraped from Fox News + Politico + New York Times |
+| 2024 | Scraped from Fox News |
+
+> ⚠️ **Not authoritative** — scraped from news outlets, not official state boards of elections.
+> Repo README explicitly states: *"the results are exhaustive, they are not authoritative."*
+> This is why Tier 3 = validation + prototyping only, not primary training data.
+
+**CSV files in repo:**
+
+| File | Content |
+|---|---|
+| `2024_US_County_Level_Presidential_Results.csv` | 2024 results only |
+| `2020_US_County_Level_Presidential_Results.csv` | 2020 results only |
+| `2016_US_County_Level_Presidential_Results.csv` | 2016 results only |
+| `US_County_Level_Presidential_Results_08-16.csv` | Combined 2008–2016 |
+
+**Schema (wide format — one row per county per year):**
+
+| Column | Maps to our CSV | Notes |
+|---|---|---|
+| `county_fips` | *(join key)* | 5-digit FIPS code |
+| `votes_dem` | `Democratic Votes` | direct |
+| `votes_gop` | `Republican Votes` | direct |
+| `total_votes` | `Total Ballots Cast` | direct |
+| `per_dem` | `Democratic Vote Share` | pre-calculated |
+| `per_gop` | `Republican Vote Share` | pre-calculated |
+| `state_abbr` | `State` | direct |
+| `county_name` | `County` | title case |
+
+> **Alaska caveat:** Alaska results are reported by **house district** (not borough/county),
+> exactly matching the issue already documented in our Tier 1 data (House District 40 / Mat-Su).
+> Washington D.C. results are reported by **ward**. Filter or handle separately.
 
 **Advantages over Tier 2 (MEDSL):**
 
-| Property | Tier 2 (MEDSL) | Tier 3 (County Results Repo) |
+| Property | Tier 2 (MEDSL) | Tier 3 (tonmcg repo) |
 |---|---|---|
-| Format | Long (one row per candidate per year) | Wide (one row per county per year) |
+| Format | Long (one row per candidate per year) | Wide (one row per county per year) — ready to use |
 | Ingestion complexity | Requires pivot + dedup | Direct append after column rename |
-| Guestbook / download gate | ✅ Required (Harvard Dataverse) | ❌ None — direct GitHub download |
-| File size | ~9.8 MB tab-delimited | Lightweight (multiple small CSVs) |
+| Download gate | Harvard Dataverse guestbook form | Direct `curl` / raw GitHub URL — no gate |
+| File size | ~9.8 MB tab-delimited | ~500 KB per year CSV |
 | 2024 data | ✅ Included | ✅ Included |
 | Registration / turnout | ❌ Not available | ❌ Not available |
-| Academic citation | ✅ doi:10.7910/DVN/VOQCHQ | ⚠️ Community maintained |
+| FIPS codes | ✅ Yes | ✅ Yes — enables Census/EAVS join |
+| Academic citation | ✅ doi:10.7910/DVN/VOQCHQ (MEDSL) | ⚠️ DOI via Zenodo — community sourced |
+| Source authority | Academic / state boards | News scrapes — not official |
 
 **Operational role in this project:**
 
-- **Secondary validation** — cross-check MEDSL vote totals for the same county-year; flag discrepancies > 1% as data quality issues
-- **Rapid ingestion layer** — for prototyping new features, swap MEDSL for Tier 3 to skip the pivot/dedup ETL
-- **2024 gap-fill** — if any county is in Tier 3 but missing from MEDSL's 2024 coverage, use Tier 3 as fill-in with `Source = 'county_repo'`
-- **Visualization prototyping** — lightweight enough to load in a Colab cell in seconds; ideal for notebooks/01_explore_data.ipynb
+- **Secondary validation** — join on `county_fips` + year, compare `votes_dem` / `votes_gop` to MEDSL; flag rows with > 1% divergence as DQ issues
+- **Rapid prototyping** — wide format loads directly into pandas with zero ETL; use for feature experiments in Colab notebooks
+- **2024 gap-fill** — any county missing from MEDSL 2024 coverage can be filled from this repo with `Source = 'county_repo'` provenance tag
+- **FIPS-based joins** — `county_fips` enables joining to Census population, EAVS registration, or any other FIPS-keyed dataset
 
 **NOT a replacement for Tier 2 because:**
-- Community-maintained; no academic peer review or DOI
-- No citation chain suitable for a responsible AI/research context
-- Should not be primary training data; use as `Source = 'county_repo'` and weight accordingly
+- Scraped from news outlets; no peer review, no official source chain
+- Alaska/DC data is at sub-county geographic level
+- Should not be primary training data — use `Source = 'county_repo'` to track provenance
 
 **Integration tasks:**
-- [ ] Identify exact repository URL and verify license terms
-- [ ] Add `Source = 'county_repo'` provenance value to `voting_pres_data.csv` schema
-- [ ] Write validation script `tests/validate_tier3.py`: load Tier 3, join on (County, State, Year), compare `Democratic Votes` + `Republican Votes` to MEDSL — flag rows with > 1% divergence
-- [ ] Add Tier 3 as optional `data/county_repo/` directory in `.gitignore` (not committed; fetched at runtime like MEDSL)
-- [ ] Update `DISCLAIMER.md` with Tier 3 attribution once URL confirmed
+- [x] Identify exact repository URL and verify license — MIT ✅ `https://github.com/tonmcg/US_County_Level_Election_Results_08-24`
+- [ ] Add `Source = 'county_repo'` provenance value to `voting_pres_data.csv` schema docs
+- [ ] Write validation script `tests/validate_tier3.py`:
+  - Download `2024_US_County_Level_Presidential_Results.csv` via raw GitHub URL
+  - Join to `voting_pres_data.csv` on `county_fips` (need FIPS in our data) or `(County, State, Year)`
+  - Compare `votes_dem` / `votes_gop` to MEDSL values — flag rows with > 1% divergence
+- [ ] Add `data/county_repo/` to `.gitignore` (not committed; fetched at runtime)
+- [ ] Update `DISCLAIMER.md` with Tier 3 attribution: Tony McGovern, MIT license, Zenodo DOI
 
 ---
 
