@@ -1,289 +1,405 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Election Prediction Report</title>
+    <title>MyVoterWisdom — 2028 Election Prediction</title>
     <style>
+        :root {
+            --blue:   #0099cc;
+            --dark:   #1a1a2e;
+            --card:   #ffffff;
+            --muted:  #6b7280;
+            --border: #e5e7eb;
+            --green:  #059669;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
             line-height: 1.6;
         }
+
+        /* HEADER */
         header {
-            background-color: #0099cc;
+            background: var(--dark);
             color: #fff;
+            padding: 40px 24px 32px;
             text-align: center;
-            padding: 20px;
         }
-        header h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
-        }
-        header p {
-            font-size: 18px;
-        }
-        .report {
-            padding: 20px;
-            background-color: #fff;
-            margin: 20px auto;
-            max-width: 800px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .report h2 {
-            font-size: 28px;
-            margin-bottom: 15px;
-        }
-        .report-details p {
-            font-size: 20px;
-            margin: 10px 0;
-        }
-        .footer {
-            background-color: #0099cc;
+        header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+        header p  { color: #a5b4fc; margin-top: 8px; font-size: 1rem; }
+        .badges   { margin-top: 16px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .badges a img { height: 20px; border-radius: 4px; }
+
+        /* WISDOM FORMULA */
+        .wisdom-banner {
+            background: linear-gradient(135deg, var(--blue), #6366f1);
             color: #fff;
+            padding: 28px 24px;
             text-align: center;
-            padding: 15px;
         }
-        .footer p {
-            font-size: 16px;
+        .wisdom-banner h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px; opacity: .8; margin-bottom: 12px; }
+        .formula {
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
-        .highlight {
-            font-weight: bold;
+        .formula .dim    { background: rgba(255,255,255,.18); border-radius: 8px; padding: 8px 16px; font-size: 1rem; }
+        .formula .op     { opacity: .7; font-size: 1.2rem; }
+        .formula .result { font-size: 1.6rem; font-weight: 800; }
+        .wisdom-dims {
+            margin-top: 16px;
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            font-size: .85rem;
+            opacity: .9;
         }
-        .explanation {
-            padding: 20px;
-            background-color: #fff;
-            margin: 20px auto;
-            max-width: 800px;
+        .wisdom-dims span { background: rgba(255,255,255,.12); padding: 4px 12px; border-radius: 20px; }
+
+        /* MAIN */
+        main { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+
+        /* CARD */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 { font-size: 1.15rem; font-weight: 600; margin-bottom: 16px; color: var(--dark); }
+
+        /* PREDICT FORM */
+        .predict-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+        }
+        .predict-form label  { font-size: .8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 4px; }
+        .predict-form select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: .95rem; background: #fff; cursor: pointer; }
+        .predict-form select:focus { outline: 2px solid var(--blue); }
+        #fetchPrediction {
+            padding: 10px 22px;
+            background: var(--blue);
+            color: #fff;
+            border: none;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s;
+            white-space: nowrap;
         }
-        .explanation h2 {
-            font-size: 28px;
-            margin-bottom: 15px;
+        #fetchPrediction:disabled { background: #9ca3af; cursor: not-allowed; }
+        #fetchPrediction:not(:disabled):hover { background: #007aaa; }
+        @media(max-width:580px) { .predict-form { grid-template-columns: 1fr; } }
+
+        /* LOADING */
+        #loading { display: none; text-align: center; padding: 16px; color: var(--muted); font-style: italic; font-size: .9rem; }
+
+        /* RESULTS */
+        #wisdom-result { display: none; }
+        #prediction-summary {
+            background: #eff6ff;
+            border-left: 4px solid var(--blue);
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            font-size: 1rem;
+            margin-bottom: 20px;
         }
-        .explanation p {
-            font-size: 20px;
-            margin: 10px 0;
-        }
+        .model-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        @media(max-width:560px) { .model-grid { grid-template-columns: 1fr; } }
+        .model-card { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+        .model-card h3      { font-size: .9rem; font-weight: 700; margin-bottom: 10px; color: var(--dark); }
+        .model-card .accuracy { font-size: 1.5rem; font-weight: 800; color: var(--blue); }
+        .model-card .stats  { font-size: .8rem; color: var(--muted); margin-top: 6px; line-height: 1.8; }
+        .prediction-badge   { display: inline-block; margin-top: 8px; padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 700; }
+        .dem { background: #dbeafe; color: #1d4ed8; }
+        .rep { background: #fee2e2; color: #b91c1c; }
+
+        /* COLAB LINKS */
+        .notebook-list   { display: flex; flex-direction: column; gap: 10px; }
+        .notebook-link   { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; text-decoration: none; color: inherit; transition: border-color .2s, box-shadow .2s; }
+        .notebook-link:hover { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,153,204,.1); }
+        .nb-icon  { font-size: 1.4rem; }
+        .nb-title { font-weight: 600; font-size: .9rem; }
+        .nb-desc  { font-size: .8rem; color: var(--muted); }
+        .colab-badge { margin-left: auto; background: #f9ab00; color: #000; font-size: .7rem; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+
+        /* ABOUT */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        @media(max-width:560px) { .about-grid { grid-template-columns: 1fr; } }
+        .about-item { text-align: center; padding: 14px; border: 1px solid var(--border); border-radius: 8px; }
+        .about-item .icon { font-size: 1.6rem; margin-bottom: 6px; }
+        .about-item p { font-size: .8rem; color: var(--muted); margin-top: 4px; }
+
+        /* FOOTER */
+        footer { background: var(--dark); color: #9ca3af; text-align: center; padding: 24px; font-size: .85rem; }
+        footer a { color: #a5b4fc; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Election Prediction Report</h1>
-        <p>Predictions and analysis for the 2028 election in Orange County, CA</p>
-    </header>
 
-    <!-- Dropdowns for selecting state and county -->
-    <div>
-        <label for="stateSelect">Select State:</label>
-        <select id="stateSelect">
-            <!-- Options will be populated dynamically -->
-        </select>
+<header>
+    <h1>MyVoterWisdom</h1>
+    <p>Open-source election prediction &middot; 39 counties &middot; 25 states &middot; 2004&ndash;2028</p>
+    <div class="badges">
+        <a href="https://github.com/sysWisdom/myvoterwisdom" target="_blank">
+            <img src="https://img.shields.io/badge/GitHub-sysWisdom%2Fmyvoterwisdom-blue?logo=github" alt="GitHub">
+        </a>
+        <a href="https://colab.research.google.com/github/sysWisdom/myvoterwisdom/blob/main/notebooks/01_explore_data.ipynb" target="_blank">
+            <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab">
+        </a>
+        <a href="https://github.com/sysWisdom/AIQualityManifesto" target="_blank">
+            <img src="https://img.shields.io/badge/Wisdom-AIQualityManifesto-6366f1?logo=github" alt="AIQualityManifesto">
+        </a>
     </div>
-    <div>
-        <label for="countySelect">Select County:</label>
-        <select id="countySelect" disabled>
-            <!-- Options will be populated dynamically -->
-        </select>
-    </div>
-    <button id="fetchPrediction" disabled>Get Prediction</button>
+</header>
 
-    <div class="report">
-        <h2>2028 Election Prediction</h2>
-        <div class="report-details">
-            <p id="prediction"></p>
+<div class="wisdom-banner">
+    <h2>The Wisdom Formula</h2>
+    <div class="formula">
+        <span class="dim">Completeness</span>
+        <span class="op">+</span>
+        <span class="dim">Consistency</span>
+        <span class="op">+</span>
+        <span class="dim">Validity</span>
+        <span class="op">=</span>
+        <span class="result">Wisdom</span>
+    </div>
+    <div class="wisdom-dims">
+        <span>Completeness &mdash; Did we evaluate the entire context?</span>
+        <span>Consistency &mdash; Are outcomes stable across 4 models?</span>
+        <span>Validity &mdash; Are results grounded in historical data?</span>
+    </div>
+</div>
+
+<main>
+
+    <!-- PREDICT TOOL -->
+    <div class="card">
+        <h2>2028 County Prediction</h2>
+        <div class="predict-form">
+            <div>
+                <label for="stateSelect">State</label>
+                <select id="stateSelect"><option value="">&#8212; select state &#8212;</option></select>
+            </div>
+            <div>
+                <label for="countySelect">County</label>
+                <select id="countySelect" disabled><option value="">&#8212; select county &#8212;</option></select>
+            </div>
+            <div>
+                <label>&nbsp;</label>
+                <button id="fetchPrediction" disabled>Run Prediction</button>
+            </div>
+        </div>
+        <p id="loading">Running 4 models &#8212; Random Forest, Logistic Regression, SVM, Gradient Boosting&#8230;<br>
+        <small>First request after idle may take up to 60s on the free tier.</small></p>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="wisdom-result">
+        <div class="card">
+            <h2>Wisdom Analysis</h2>
+            <div id="prediction-summary"></div>
+            <div class="model-grid" id="model-grid"></div>
         </div>
     </div>
-    <div class="explanation">
-        <h2>What is this about?</h2>
-        <p>Imagine you're a teacher grading a student's answers to a test. This report is like the grading system for a computer program that tried to guess the correct answers to a set of questions.</p>
-        <h2>What do the numbers mean?</h2>
-        <p><strong>Precision:</strong> How many of the answers the computer guessed correctly out of all the answers it gave? (Think of it like the percentage of correct answers it actually got right from what it claimed was right.)</p>
-        <p><strong>Recall:</strong> Out of all the correct answers that existed, how many did the computer find? (Like finding all your missing socks – did the computer find them all or just a few?)</p>
-        <p><strong>F1-Score:</strong> A balance between precision and recall. If precision is like accuracy and recall is like effort, the F1-score shows how well they worked together.</p>
-        <p><strong>Support:</strong> How many questions were in each group or category that the computer was grading.</p>
-    </div>
-    <div class="report">
-        <h2>Classification Reports</h2>
-        <div class="report-details" id="classification-reports"></div>
-    </div>
-    <div class="footer">
-        <p>&copy; 2025 SysWisdom.AI</p>
-    </div>
-    <div id="donate-button-container">
-        <div id="donate-button"></div>
-        <script src="https://www.paypalobjects.com/donate/sdk/donate-sdk.js" charset="UTF-8"></script>
-        <script>
-        PayPal.Donation.Button({
-        env:'production',
-        hosted_button_id:'29RQA3MYT53HC',
-        image: {
-        src:'https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif',
-        alt:'Donate with PayPal button',
-        title:'PayPal - The safer, easier way to pay online!',
-        }
-        }).render('#donate-button');
-        </script>
-    </div>        
-    <script>
-        // When served from GitHub Pages, route API calls to the Render backend.
-        // When served from Flask directly (localhost or Render itself), use relative URLs.
-        const API_BASE = window.location.hostname === 'myvoter.syswisdom.ai'
-            ? 'https://myvoterwisdom.onrender.com'
-            : '';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const stateSelect = document.getElementById('stateSelect');
-            const countySelect = document.getElementById('countySelect');
-            const fetchPredictionButton = document.getElementById('fetchPrediction');
+    <!-- COLAB NOTEBOOKS -->
+    <div class="card">
+        <h2>Explore in Google Colab &#8212; free, no install required</h2>
+        <div class="notebook-list">
+            <a class="notebook-link" href="https://colab.research.google.com/github/sysWisdom/myvoterwisdom/blob/main/notebooks/01_explore_data.ipynb" target="_blank">
+                <span class="nb-icon">&#x1F4CA;</span>
+                <div>
+                    <div class="nb-title">01 &mdash; Explore the Data</div>
+                    <div class="nb-desc">Load, visualize &amp; inspect 233 county records across 6 election years (2004&ndash;2024)</div>
+                </div>
+                <span class="colab-badge">Open in Colab</span>
+            </a>
+            <a class="notebook-link" href="https://colab.research.google.com/github/sysWisdom/myvoterwisdom/blob/main/notebooks/02_train_model.ipynb" target="_blank">
+                <span class="nb-icon">&#x1F916;</span>
+                <div>
+                    <div class="nb-title">02 &mdash; Train the Models</div>
+                    <div class="nb-desc">Preprocessing pipeline, Random Forest training with SMOTE balancing, feature importance chart</div>
+                </div>
+                <span class="colab-badge">Open in Colab</span>
+            </a>
+            <a class="notebook-link" href="https://colab.research.google.com/github/sysWisdom/myvoterwisdom/blob/main/notebooks/03_predict_county.ipynb" target="_blank">
+                <span class="nb-icon">&#x1F5F3;&#xFE0F;</span>
+                <div>
+                    <div class="nb-title">03 &mdash; Predict a County</div>
+                    <div class="nb-desc">Interactive county selector &#8212; all 4 models, Laplace fallback, accuracy comparison chart</div>
+                </div>
+                <span class="colab-badge">Open in Colab</span>
+            </a>
+        </div>
+    </div>
 
-            // Fetch and populate state options
-            fetch(`${API_BASE}/data/state.json`)
-                .then(response => response.json())
-                .then(states => {
-                    console.log("States fetched:", states); // Debugging: Log the fetched states
-                    states.forEach(state => {
-                        const option = document.createElement('option');
-                        option.value = state;
-                        option.textContent = state;
-                        stateSelect.appendChild(option);
-                    });
-                })
-                .catch(error => {
-                    console.error("Error fetching states:", error); // Debugging: Log any errors
+    <!-- ABOUT -->
+    <div class="card">
+        <h2>About this project</h2>
+        <div class="about-grid">
+            <div class="about-item">
+                <div class="icon">&#x1F3DB;&#xFE0F;</div>
+                <strong>Public data only</strong>
+                <p>County-level election records 2004&ndash;2024. No PII. No voter targeting.</p>
+            </div>
+            <div class="about-item">
+                <div class="icon">&#x1F52C;</div>
+                <strong>4 ML models</strong>
+                <p>Random Forest &middot; Logistic Regression &middot; SVM &middot; Gradient Boosting with SMOTE balancing</p>
+            </div>
+            <div class="about-item">
+                <div class="icon">&#x2696;&#xFE0F;</div>
+                <strong>Non-partisan</strong>
+                <p>Educational research only. Not for use in campaigns or political advertising.</p>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-links">
+        <a href="https://github.com/sysWisdom/myvoterwisdom" target="_blank">GitHub</a>
+        <a href="https://github.com/sysWisdom/AIQualityManifesto" target="_blank">AI Quality Manifesto</a>
+        <a href="https://github.com/sysWisdom/myvoterwisdom/blob/main/README.md" target="_blank">README</a>
+        <a href="mailto:info@syswisdom.ai">Contact</a>
+    </div>
+    <p>&copy; 2026 SysWisdom.AI &middot; BSD 3-Clause License &middot; Built with civic purpose</p>
+</footer>
+
+<script>
+    const API_BASE = window.location.hostname === 'myvoter.syswisdom.ai'
+        ? 'https://myvoterwisdom.onrender.com'
+        : '';
+
+    const stateSelect  = document.getElementById('stateSelect');
+    const countySelect = document.getElementById('countySelect');
+    const runBtn       = document.getElementById('fetchPrediction');
+    const loading      = document.getElementById('loading');
+
+    // Load states
+    fetch(`${API_BASE}/data/state.json`)
+        .then(r => r.json())
+        .then(states => {
+            states.forEach(s => {
+                const o = document.createElement('option');
+                o.value = o.textContent = s;
+                stateSelect.appendChild(o);
+            });
+        })
+        .catch(() => {});
+
+    stateSelect.addEventListener('change', () => {
+        countySelect.innerHTML = '<option value="">&#8212; select county &#8212;</option>';
+        countySelect.disabled = true;
+        runBtn.disabled = true;
+
+        fetch(`${API_BASE}/data/county.json`)
+            .then(r => r.json())
+            .then(map => {
+                (map[stateSelect.value] || []).forEach(c => {
+                    const o = document.createElement('option');
+                    o.value = o.textContent = c;
+                    countySelect.appendChild(o);
                 });
-
-            // Event listener for state selection
-            stateSelect.addEventListener('change', () => {
-                const selectedState = stateSelect.value;
-                countySelect.innerHTML = ''; // Clear previous options
-                countySelect.disabled = true;
-                fetchPredictionButton.disabled = false;
-
-                // Fetch and populate county options based on selected state
-                fetch(`${API_BASE}/data/county.json`)
-                    .then(response => response.json())
-                    .then(countiesByState => {
-                        console.log("Counties fetched for state:", countiesByState); // Debugging: Log the fetched counties
-                        const counties = countiesByState[selectedState] || [];
-                        counties.forEach(county => {
-                            const option = document.createElement('option');
-                            option.value = county;
-                            option.textContent = county;
-                            countySelect.appendChild(option);
-                        });
-                        countySelect.disabled = false;
-                    })
-                    .catch(error => {
-                        console.error("Error fetching counties:", error); // Debugging: Log any errors
-                    });
+                countySelect.disabled = false;
             });
+    });
 
-            // Event listener for county selection
-            countySelect.addEventListener('change', () => {
-                fetchPredictionButton.disabled = countySelect.value === '';
+    countySelect.addEventListener('change', () => {
+        runBtn.disabled = countySelect.value === '';
+    });
+
+    runBtn.addEventListener('click', () => {
+        const state  = stateSelect.value;
+        const county = countySelect.value;
+        loading.style.display = 'block';
+        document.getElementById('wisdom-result').style.display = 'none';
+        runBtn.disabled = true;
+
+        fetch(`${API_BASE}/predict?state=${encodeURIComponent(state)}&county=${encodeURIComponent(county)}`)
+            .then(r => r.json())
+            .then(data => {
+                loading.style.display = 'none';
+                runBtn.disabled = false;
+                renderResults(data, county, state);
+            })
+            .catch(err => {
+                loading.style.display = 'none';
+                runBtn.disabled = false;
+                alert('Prediction service may be warming up (free tier: up to 60s). Please try again in a moment.');
+                console.error(err);
             });
+    });
 
-            // Event listener for fetching prediction
-            fetchPredictionButton.addEventListener('click', () => {
-                const selectedState = stateSelect.value;
-                const selectedCounty = countySelect.value;
-                console.log(`Fetching prediction for state: ${selectedState}, county: ${selectedCounty}`); // Debugging: Log the selected values
-                fetchPrediction(selectedState, selectedCounty);
-            });
+    function renderResults(data, county, state) {
+        const resultEl = document.getElementById('wisdom-result');
+        const summary  = document.getElementById('prediction-summary');
+        const grid     = document.getElementById('model-grid');
 
-            function fetchPrediction(state, county) {
-                fetch(`${API_BASE}/predict?state=${state}&county=${county}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const classificationReports = document.getElementById('classification-reports');
-                        classificationReports.innerHTML = ''; // Clear previous reports
+        if (data.message) {
+            summary.innerHTML = `<strong>Note:</strong> ${data.message}`;
+            grid.innerHTML = '';
+            resultEl.style.display = 'block';
+            return;
+        }
 
-                        if (data.message) {
-                            // Display the message if the data contains only one class
-                            document.getElementById('prediction').innerHTML = data.message;
-                            return;
-                        }
+        const models  = ['Random Forest', 'Logistic Regression', 'SVM', 'Gradient Boosting'];
+        const preds   = data.predictions || {};
+        const reports = data.classification_reports || {};
 
-                        const models = ['Random Forest', 'Logistic Regression', 'SVM', 'Gradient Boosting'];
+        const votes    = models.map(m => (preds[m] || [0])[0]);
+        const demVotes = votes.filter(v => v === 1).length;
+        const repVotes = votes.filter(v => v === 0).length;
+        const winner   = demVotes >= repVotes ? 'Democratic' : 'Republican';
+        const agree    = demVotes === 4 || repVotes === 4;
 
-                        models.forEach(model => {
-                            const report = data.classification_reports[model];
-                            const modelDiv = document.createElement('div');
-                            modelDiv.innerHTML = `
-                                <h1>Classification Report: ${model}</h1>
-                                <div class="report">
-                                    <p><span class="highlight">Group 0:</span> Precision: ${report['0'] ? (report['0'].precision * 100).toFixed(2) + '%' : 'N/A'}, Recall: ${report['0'] ? (report['0'].recall * 100).toFixed(2) + '%' : 'N/A'}, F1-score: ${report['0'] ? (report['0']['f1-score'] * 100).toFixed(2) + '%' : 'N/A'}</p>
-                                    <p><span class="highlight">Group 1:</span></p>
-                                    <ul>
-                                        <li>Precision: ${(report['1'].precision * 100).toFixed(2)}%</li>
-                                        <li>Recall: ${(report['1'].recall * 100).toFixed(2)}%</li>
-                                        <li>F1-score: ${(report['1']['f1-score'] * 100).toFixed(2)}%</li>
-                                    </ul>
-                                    <h3>Overall Performance:</h3>
-                                    <ul>
-                                        <li><span class="highlight">Accuracy:</span> ${(report.accuracy * 100).toFixed(2)}%</li>
-                                        <li><span class="highlight">Macro Average:</span>
-                                            <ul>
-                                                <li>Precision: ${(report['macro avg'].precision * 100).toFixed(2)}%</li>
-                                                <li>Recall: ${(report['macro avg'].recall * 100).toFixed(2)}%</li>
-                                                <li>F1-score: ${(report['macro avg']['f1-score'] * 100).toFixed(2)}%</li>
-                                            </ul>
-                                        </li>
-                                    </ul>
-                                </div>
-                            `;
-                            classificationReports.appendChild(modelDiv);
-                        });
+        summary.innerHTML = `
+            <strong>${county}, ${state} &mdash; 2028 Projection:</strong>
+            ${winner} win predicted by ${Math.max(demVotes, repVotes)} of 4 models.
+            ${agree ? '&#x2705; All 4 models agree &mdash; high Consistency (Wisdom &uarr;)' : '&#x26A0;&#xFE0F; Models disagree &mdash; review individual results below'}
+        `;
 
-                        let predictionText = '';
-                        const randomForestPrediction = data.predictions['Random Forest'][0] === 1 ? 'Democratic' : 'Republican';
-                        predictionText += `For ${county}, ${state}, the Random Forest model predicts a ${randomForestPrediction} win in 2028.<br>`;
+        grid.innerHTML = '';
+        models.forEach(model => {
+            const r   = reports[model] || {};
+            const acc = r.accuracy != null ? (r.accuracy * 100).toFixed(1) + '%' : 'N/A';
+            const p   = (preds[model] || [0])[0];
+            const cls = p === 1 ? 'dem' : 'rep';
+            const lbl = p === 1 ? 'Democratic' : 'Republican';
+            const prec = r['macro avg'] ? (r['macro avg'].precision  * 100).toFixed(1) + '%' : '&mdash;';
+            const rec  = r['macro avg'] ? (r['macro avg'].recall     * 100).toFixed(1) + '%' : '&mdash;';
+            const f1   = r['macro avg'] ? (r['macro avg']['f1-score']* 100).toFixed(1) + '%' : '&mdash;';
 
-                        const firstPredictions = Object.keys(data.predictions).map(model => data.predictions[model][0]);
-                        const democraticWins = firstPredictions.filter(pred => pred === 1).length;
-                        const republicanWins = firstPredictions.filter(pred => pred === 0).length;
-
-                        if (democraticWins >= republicanWins) {
-                            predictionText += 'The majority of models predict a Democratic win in 2028.';
-                        } else {
-                            predictionText += 'The majority of models predict a Republican win in 2028.';
-                        }
-
-                        document.getElementById('prediction').innerHTML = predictionText;
-                    })
-                    .catch(error => console.error('Error loading results:', error));
-            }
-
-            // Fetch the results.json file and display the likely winner and probability
-            fetch('results.json')
-                .then(response => response.json())
-                .then(data => {
-                    const resultsDiv = document.getElementById('prediction');
-
-                    // Create and append the message paragraph
-                    const message = document.createElement('p');
-                    message.textContent = data.message;
-                    resultsDiv.appendChild(message);
-
-                    // Check if likely_winner and likely_winner_prob are present
-                    if (data.likely_winner && data.likely_winner_prob !== undefined) {
-                        // Create and append the likely winner paragraph
-                        const winner = document.createElement('p');
-                        winner.textContent = `Likely Winner: ${data.likely_winner}`;
-                        resultsDiv.appendChild(winner);
-
-                        // Create and append the likely winner probability paragraph
-                        const winnerProb = document.createElement('p');
-                        winnerProb.textContent = `Likely Winner Probability: ${data.likely_winner_prob.toFixed(2)}%`;
-                        resultsDiv.appendChild(winnerProb);
-                    }
-                })
-                .catch(error => console.error('Error fetching results:', error));
+            const card = document.createElement('div');
+            card.className = 'model-card';
+            card.innerHTML = `
+                <h3>${model}</h3>
+                <div class="accuracy">${acc}</div>
+                <div class="stats">Precision: ${prec} &nbsp;|&nbsp; Recall: ${rec} &nbsp;|&nbsp; F1: ${f1}</div>
+                <span class="prediction-badge ${cls}">${lbl}</span>
+            `;
+            grid.appendChild(card);
         });
-    </script>
+
+        resultEl.style.display = 'block';
+        resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+</script>
 </body>
 </html>
