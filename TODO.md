@@ -130,20 +130,22 @@
 
 ## Phase 4 — syswisdom.ai Vision
 
-### 4.1 Architecture Decision
-- [ ] Decide on scope: **public educational dashboard** vs. full API platform
-- [ ] Recommended free-tier stack on Google Cloud:
+### 4.1 Architecture Decision ✅
+- [x] Scope: **public educational dashboard** — free, open-source, no billing required
+- [x] Chosen stack:
   ```
-  Frontend  → Firebase Hosting (free tier, custom domain syswisdom.ai)
-  Backend   → Cloud Run (containerized Flask app, free 2M req/month)
-  Data/ML   → Colab notebooks + Cloud Storage (5GB free)
-  Domain    → Purchase syswisdom.ai via Google Domains (~$12/yr)
+  Frontend  → GitHub Pages (free, myvoter.syswisdom.ai) ✅ LIVE
+  Backend   → Render.com free tier (Flask /predict API, when needed)
+  Data/ML   → Colab notebooks + GitHub repo (git clone, no GCS needed)
+  Domain    → syswisdom.ai already owned — using myvoter subdomain ✅
   ```
 
-### 4.2 Domain & Hosting
-- [ ] Check availability of `syswisdom.ai` domain
-- [ ] Set up Firebase Hosting project
-- [ ] Deploy `static/index.html` + `static/styles.css` to Firebase
+### 4.2 Domain & Hosting ✅
+- [x] `syswisdom.ai` domain already owned — using subdomain `myvoter.syswisdom.ai`
+- [x] Wix DNS CNAME: `myvoter` → `syswisdom.github.io` (1hr TTL)
+- [x] GitHub Actions deploy: `.github/workflows/deploy-pages.yml` (auto-deploys `static/` on push)
+- [x] **Live at https://myvoter.syswisdom.ai** — HTTPS enforced ✅ (2026-05-25)
+- ~~Set up Firebase Hosting~~ — superseded by GitHub Pages
 
 ### 4.3 Containerize the Flask App for Cloud Run
 - [ ] Create a `Dockerfile`:
