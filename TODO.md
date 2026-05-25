@@ -111,15 +111,12 @@
 - [x] Created `notebooks/03_predict_county.ipynb` — interactive county/state selector, all 4 models (RF, LR, SVM, GB), Laplace fallback, accuracy chart
 - [x] Added "Open in Colab" badge table to README (all 3 notebooks, auto-clone on first run)
 
-### 3.2 Mount Google Drive in Colab (Free Storage)
-```python
-# First cell of any notebook:
-from google.colab import drive
-drive.mount('/content/drive')
-DATA_PATH = '/content/drive/MyDrive/WisdomAI_2020/data/voting_pres_data.csv'
-```
-- [ ] Upload `data/` folder to Google Drive
-- [ ] Update all data paths to use the Drive mount pattern above
+### 3.2 Data Access in Colab
+> ✅ **Superseded** — all 3 notebooks use `git clone https://github.com/sysWisdom/myvoterwisdom.git`
+> which pulls data directly from the public GitHub repo. Free for all users, no GCS/Drive quota consumed.
+> Google Drive mount is only needed if the repo is private or data exceeds GitHub's file size limits.
+- ~~Upload `data/` folder to Google Drive~~
+- ~~Update all data paths to use the Drive mount pattern above~~
 
 ### 3.3 How to Run for Free (Step-by-Step)
 1. Go to [colab.research.google.com](https://colab.research.google.com)
@@ -183,5 +180,5 @@ DATA_PATH = '/content/drive/MyDrive/WisdomAI_2020/data/voting_pres_data.csv'
 - [x] Fix `requirements.txt` encoding (Phase 1.3)
 - [x] Fix hardcoded path in `main_vote2028.py` (Phase 1.1)
 - [x] Add Disclaimer section to README (Phase 2.1)
-- [ ] Upload data to Google Drive and open first notebook in Colab (Phase 3.2)
+- [x] Upload data to Google Drive and open first notebook in Colab (Phase 3.2) — N/A, git clone approach is better
 - [x] GitHub public release complete — repo live at https://github.com/sysWisdom/myvoterwisdom
