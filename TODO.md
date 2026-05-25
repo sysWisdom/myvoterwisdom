@@ -168,7 +168,25 @@
 - [ ] (Optional) Create `Dockerfile` using `python:3.11-slim` + `requirements-server.txt`
 - [ ] (Optional) Deploy to Cloud Run: `gcloud run deploy wisdomai --source .`
 
-### 4.4 Responsible AI Statement for syswisdom.ai
+### 4.4 Data Quality Score — ✅ LIVE 2026-05-25
+- [x] `/data-quality` proxy route added to `app.py` — API key never reaches browser
+- [x] Dataset Quality Score card added to `static/index.html` — green button, score circle, dimension bars, issue list
+- [x] `DATA_QUALITY_API_KEY` set in Render environment (confirmed working)
+- [x] **Confirmed live result** — `prediction_pres_data.csv` (38 rows × 11 columns):
+
+  | Dimension    | Score | Interpretation |
+  |---|---|---|
+  | Completeness | 100%  | No missing values — all fields present |
+  | Consistency  | 100%  | No conflicting records across rows |
+  | Validity     | 25%   | 5 columns flagged for outliers (see below) |
+  | **Overall**  | **73.8%** | Above 70% Wisdom threshold ✅ |
+
+  > **Validity outliers are expected** — projected vote totals span from small rural counties
+  > (e.g. Glacier County MT: 5,370 ballots) to large urban ones (Harris County TX: 1.7M ballots).
+  > Statistical outlier detection flags this spread as anomalous, but it reflects real geographic
+  > diversity in the data, not errors. The 73.8% score is appropriate for this dataset.
+
+### 4.5 Responsible AI Statement for syswisdom.ai
 - [ ] Write a one-page "About this project" page explaining:
   - Built as civic education, not for campaigns
   - Open-source and free forever
