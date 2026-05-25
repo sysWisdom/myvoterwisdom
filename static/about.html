@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — MyVoterWisdom</title>
+    <style>
+        :root {
+            --blue:   #0099cc;
+            --dark:   #1a1a2e;
+            --card:   #ffffff;
+            --muted:  #6b7280;
+            --border: #e5e7eb;
+            --green:  #059669;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f3f4f6;
+            color: #111827;
+            line-height: 1.7;
+        }
+        header {
+            background: var(--dark);
+            color: #fff;
+            padding: 36px 24px 28px;
+            text-align: center;
+        }
+        header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; }
+        header p  { color: #a5b4fc; margin-top: 6px; font-size: 1rem; }
+        header nav { margin-top: 16px; }
+        header nav a {
+            color: #a5b4fc;
+            text-decoration: none;
+            font-size: .9rem;
+            margin: 0 12px;
+            border-bottom: 1px solid transparent;
+            transition: border-color .2s;
+        }
+        header nav a:hover { border-color: #a5b4fc; }
+
+        .wisdom-banner {
+            background: linear-gradient(135deg, var(--blue), #6366f1);
+            color: #fff;
+            padding: 22px 24px;
+            text-align: center;
+            font-size: .95rem;
+            opacity: .95;
+        }
+        .wisdom-banner strong { font-size: 1.05rem; }
+
+        main { max-width: 800px; margin: 0 auto; padding: 28px 16px 60px; }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.08);
+            padding: 28px 28px 24px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 14px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+        }
+        .card p  { font-size: .95rem; color: #374151; margin-bottom: 12px; }
+        .card p:last-child { margin-bottom: 0; }
+
+        .timeline { list-style: none; padding: 0; }
+        .timeline li {
+            display: flex;
+            gap: 16px;
+            padding-bottom: 20px;
+            position: relative;
+        }
+        .timeline li:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            left: 19px;
+            top: 36px;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        .tl-dot {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--blue);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-top: 2px;
+        }
+        .tl-body h3 { font-size: .95rem; font-weight: 700; color: var(--dark); }
+        .tl-body .tl-date { font-size: .78rem; color: var(--muted); margin-bottom: 4px; }
+        .tl-body p  { font-size: .88rem; color: #374151; margin: 0; line-height: 1.6; }
+
+        .score-block {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin: 14px 0;
+        }
+        .score-block h3 { font-size: .9rem; font-weight: 700; color: #065f46; margin-bottom: 8px; }
+        .score-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; font-size: .88rem; }
+        .score-row .label { width: 110px; font-weight: 600; color: #374151; }
+        .score-row .bar { flex: 1; background: #d1fae5; border-radius: 6px; height: 8px; overflow: hidden; }
+        .score-row .fill { height: 100%; border-radius: 6px; }
+        .score-row .pct { width: 44px; text-align: right; font-weight: 700; }
+        .score-note { font-size: .82rem; color: #065f46; margin-top: 8px; line-height: 1.5; }
+
+        .contrib-steps { list-style: none; counter-reset: steps; padding: 0; }
+        .contrib-steps li {
+            counter-increment: steps;
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+            font-size: .9rem;
+        }
+        .contrib-steps li::before {
+            content: counter(steps);
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: var(--blue);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: .8rem;
+            margin-top: 1px;
+        }
+        .contrib-steps li span { color: #374151; line-height: 1.6; }
+        .contrib-steps li code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; font-size: .82rem; }
+
+        .responsible-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media(max-width: 560px) { .responsible-grid { grid-template-columns: 1fr; } }
+        .resp-item { border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+        .resp-item .icon { font-size: 1.4rem; margin-bottom: 6px; }
+        .resp-item h3 { font-size: .88rem; font-weight: 700; margin-bottom: 4px; }
+        .resp-item p  { font-size: .8rem; color: var(--muted); margin: 0; line-height: 1.5; }
+
+        .article-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color .2s, box-shadow .2s;
+            margin-top: 4px;
+        }
+        .article-link:hover { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,153,204,.1); }
+        .article-link .al-icon { font-size: 1.8rem; }
+        .article-link .al-title { font-weight: 700; font-size: .95rem; color: var(--dark); }
+        .article-link .al-meta  { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+        .article-link .al-arrow { margin-left: auto; color: var(--blue); font-size: 1.2rem; }
+
+        footer {
+            background: var(--dark);
+            color: #9ca3af;
+            text-align: center;
+            padding: 24px;
+            font-size: .85rem;
+        }
+        footer a { color: #a5b4fc; text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>MyVoterWisdom</h1>
+    <p>About this project &amp; how it was built</p>
+    <nav>
+        <a href="index.html">&#x2190; Back to Predictions</a>
+        <a href="https://github.com/sysWisdom/myvoterwisdom" target="_blank">GitHub</a>
+        <a href="https://www.syswisdom.ai" target="_blank">SysWisdom.AI</a>
+    </nav>
+</header>
+
+<div class="wisdom-banner">
+    <strong>Completeness + Consistency + Validity = Wisdom</strong>
+    &nbsp;&mdash;&nbsp; Can the Wisdom Formula tell us which AI models to trust?
+</div>
+
+<main>
+
+    <!-- ORIGIN STORY -->
+    <div class="card">
+        <h2>&#x1F4D6; The Origin Story</h2>
+        <p>
+            In <strong>October 2024</strong>, <a href="https://www.syswisdom.ai" target="_blank" style="color:var(--blue)">SysWisdom.AI</a>
+            set out to answer one question: <em>does the Wisdom Formula actually work on a real-world dataset?</em>
+            We needed a problem with publicly available, verifiable historical data — and U.S. presidential
+            elections by county fit perfectly. Every vote is on the public record. Every county reports the
+            same structured data. The ground truth is known.
+        </p>
+        <p>
+            We began curating county-level election data from 2004 through 2024, applying the three Wisdom
+            dimensions to measure whether the data itself was sound enough to build predictions on. The
+            project became a live test of our own framework.
+        </p>
+
+        <ul class="timeline" style="margin-top:20px">
+            <li>
+                <div class="tl-dot">&#x1F331;</div>
+                <div class="tl-body">
+                    <div class="tl-date">October 2024</div>
+                    <h3>Project started — Wisdom model validation</h3>
+                    <p>Data curation begins. 27 counties across 2004–2024 general elections. Goal: validate the Wisdom Formula against a real, politically neutral dataset.</p>
+                </div>
+            </li>
+            <li>
+                <div class="tl-dot">&#x1F3C1;</div>
+                <div class="tl-body">
+                    <div class="tl-date">February 2025</div>
+                    <h3>Alpha complete</h3>
+                    <p>Electoral analytics platform alpha ships. 27 counties, voter trend analysis, AI forecasting models for 2028 using Random Forest, Laplace smoothing, and SMOTE.
+                    541 social media views with zero SEO investment. 20 data-driven analysis posts published.</p>
+                </div>
+            </li>
+            <li>
+                <div class="tl-dot">&#x1F680;</div>
+                <div class="tl-body">
+                    <div class="tl-date">May 2026</div>
+                    <h3>Beta — open-source public release</h3>
+                    <p>Expanded to 39 counties across 25 states. Full open-source release on GitHub. Live at
+                    <a href="https://myvoter.syswisdom.ai" style="color:var(--blue)">myvoter.syswisdom.ai</a>.
+                    4-model ML system (RF, LR, SVM, Gradient Boosting), Data Quality Score API, GitHub Actions
+                    Wisdom gate for community data contributions.</p>
+                </div>
+            </li>
+        </ul>
+
+        <a class="article-link" href="https://www.syswisdom.ai/post/we-did-it-myvoterwisdom-com-alpha-is-complete-electoral-ai-insights-platform" target="_blank">
+            <span class="al-icon">&#x1F4F0;</span>
+            <div>
+                <div class="al-title">We did it — MyVoterWisdom Alpha is Complete</div>
+                <div class="al-meta">SysWisdom.AI blog &middot; Aaron &middot; Feb 28, 2025</div>
+            </div>
+            <span class="al-arrow">&#x2192;</span>
+        </a>
+    </div>
+
+    <!-- DATA QUALITY SCORE EXPLAINED -->
+    <div class="card">
+        <h2>&#x1F4CA; Why 73.8% Is the Honest Score</h2>
+        <p>
+            When you click <strong>Check Data Quality</strong> on the main page, our backend sends
+            <code>prediction_pres_data.csv</code> to the
+            <a href="https://www.syswisdom.ai/data-quality-score" target="_blank" style="color:var(--blue)">SysWisdom Data Quality API</a>
+            and scores it against the three Wisdom dimensions. Here is what the score means — and why
+            we deliberately do not inflate it.
+        </p>
+
+        <div class="score-block">
+            <h3>Current score &mdash; prediction_pres_data.csv (38 rows &times; 11 columns)</h3>
+            <div class="score-row">
+                <span class="label">Completeness</span>
+                <div class="bar"><div class="fill" style="width:100%;background:#059669"></div></div>
+                <span class="pct" style="color:#059669">100%</span>
+            </div>
+            <div class="score-row">
+                <span class="label">Consistency</span>
+                <div class="bar"><div class="fill" style="width:100%;background:#059669"></div></div>
+                <span class="pct" style="color:#059669">100%</span>
+            </div>
+            <div class="score-row">
+                <span class="label">Validity</span>
+                <div class="bar"><div class="fill" style="width:25%;background:#dc2626"></div></div>
+                <span class="pct" style="color:#dc2626">25%</span>
+            </div>
+            <div class="score-row" style="margin-top:8px;border-top:1px solid #bbf7d0;padding-top:8px">
+                <span class="label" style="font-weight:700">Overall</span>
+                <div class="bar"><div class="fill" style="width:73.8%;background:#d97706"></div></div>
+                <span class="pct" style="color:#d97706">73.8%</span>
+            </div>
+            <p class="score-note">
+                <strong>Validity is 25% because the API detects statistical outliers in projected vote totals</strong> —
+                Harris County TX projects 1.7 million ballots while Glacier County MT projects 5,370.
+                That 300&times; spread triggers outlier flags on 5 columns. But this is not bad data:
+                it is real geographic diversity across the United States. A rural Montana county and
+                a major Texas urban county are both valid data points. The score is honest, not broken.
+            </p>
+        </div>
+
+        <p>
+            The 70% threshold in our GitHub Actions gate means a dataset needs to be at least
+            <em>Mostly Wise</em> before it can be merged. A contributor who accidentally deletes
+            data or introduces inconsistent values would drop the score and be blocked automatically.
+            This dataset, with its expected geographic spread, passes at 73.8%.
+        </p>
+    </div>
+
+    <!-- HOW TO CONTRIBUTE -->
+    <div class="card">
+        <h2>&#x1F91D; How to Contribute County Data</h2>
+        <p>
+            This is a community-curated dataset. We welcome contributions from researchers, civic
+            technologists, and data volunteers. Every data PR is automatically checked by the Wisdom
+            quality gate before it can be merged.
+        </p>
+        <ol class="contrib-steps">
+            <li><span>Fork <a href="https://github.com/sysWisdom/myvoterwisdom" target="_blank" style="color:var(--blue)">sysWisdom/myvoterwisdom</a> on GitHub and clone your fork locally.</span></li>
+            <li><span>Add or update rows in <code>data/voting_pres_data.csv</code> or <code>data/prediction_pres_data.csv</code>. Use public election records only — no PII, no individual voter data.</span></li>
+            <li><span>Open a Pull Request. GitHub Actions will automatically run the <strong>Wisdom Data Quality Gate</strong> — your changes need a score &ge; 70% to be approved.</span></li>
+            <li><span>A maintainer reviews the PR for accuracy and context. If the data checks out, it is merged and the live predictions update on the next deploy.</span></li>
+        </ol>
+        <p style="font-size:.85rem;color:var(--muted);margin-top:4px">
+            Questions? Open a <a href="https://github.com/sysWisdom/myvoterwisdom/discussions" target="_blank" style="color:var(--blue)">GitHub Discussion</a>
+            or email <a href="mailto:info@syswisdom.ai" style="color:var(--blue)">info@syswisdom.ai</a>.
+        </p>
+    </div>
+
+    <!-- RESPONSIBLE AI -->
+    <div class="card">
+        <h2>&#x2696;&#xFE0F; Responsible AI Statement</h2>
+        <p>
+            MyVoterWisdom was built as a civic education tool and a framework validation experiment.
+            We are committed to the following principles:
+        </p>
+        <div class="responsible-grid" style="margin-top:14px">
+            <div class="resp-item">
+                <div class="icon">&#x1F3DB;&#xFE0F;</div>
+                <h3>Public data only</h3>
+                <p>All data is county-level aggregate election records from public sources. No individual voter data. No PII. No micro-targeting.</p>
+            </div>
+            <div class="resp-item">
+                <div class="icon">&#x1F6AB;</div>
+                <h3>Not for campaigns</h3>
+                <p>This platform must not be used for political advertising, voter suppression, campaign targeting, or any active electoral campaign activity.</p>
+            </div>
+            <div class="resp-item">
+                <div class="icon">&#x1F513;</div>
+                <h3>Open-source forever</h3>
+                <p>BSD 3-Clause license. All code, data, and model logic is public. No black boxes. Anyone can audit, fork, or improve it.</p>
+            </div>
+            <div class="resp-item">
+                <div class="icon">&#x1F4DA;</div>
+                <h3>Educational purpose</h3>
+                <p>Designed to help people understand how AI models work on real civic data — not to influence votes or declare winners before election day.</p>
+            </div>
+            <div class="resp-item">
+                <div class="icon">&#x1F9EA;</div>
+                <h3>Honest uncertainty</h3>
+                <p>When models disagree, we say so. A "Models disagree" flag is not a failure — it is Consistency working correctly.</p>
+            </div>
+            <div class="resp-item">
+                <div class="icon">&#x1F91D;</div>
+                <h3>Community reviewed</h3>
+                <p>Data quality is enforced by automated gate AND human review. No single person controls what gets merged.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- TECHNICAL STACK -->
+    <div class="card">
+        <h2>&#x1F527; What We Built</h2>
+        <p>
+            The full stack is free-tier and open-source. No cloud billing required to run or contribute.
+        </p>
+        <table style="width:100%;border-collapse:collapse;font-size:.88rem;margin-top:8px">
+            <thead>
+                <tr style="background:#f9fafb">
+                    <th style="text-align:left;padding:8px 12px;border:1px solid var(--border)">Layer</th>
+                    <th style="text-align:left;padding:8px 12px;border:1px solid var(--border)">Technology</th>
+                    <th style="text-align:left;padding:8px 12px;border:1px solid var(--border)">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td style="padding:7px 12px;border:1px solid var(--border)">Frontend</td><td style="padding:7px 12px;border:1px solid var(--border)">GitHub Pages</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">Auto-deploys static/ on push to main</td></tr>
+                <tr style="background:#f9fafb"><td style="padding:7px 12px;border:1px solid var(--border)">Backend</td><td style="padding:7px 12px;border:1px solid var(--border)">Flask 3 on Render.com</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">Python 3.11, free tier, /predict + /data-quality</td></tr>
+                <tr><td style="padding:7px 12px;border:1px solid var(--border)">ML Models</td><td style="padding:7px 12px;border:1px solid var(--border)">scikit-learn + imbalanced-learn</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">RF, LR, SVM, Gradient Boosting with SMOTE</td></tr>
+                <tr style="background:#f9fafb"><td style="padding:7px 12px;border:1px solid var(--border)">Notebooks</td><td style="padding:7px 12px;border:1px solid var(--border)">Google Colab</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">3 notebooks, free, no install required</td></tr>
+                <tr><td style="padding:7px 12px;border:1px solid var(--border)">Data Quality</td><td style="padding:7px 12px;border:1px solid var(--border)">SysWisdom DQ API</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">Proxied server-side, key never in browser</td></tr>
+                <tr style="background:#f9fafb"><td style="padding:7px 12px;border:1px solid var(--border)">CI Gate</td><td style="padding:7px 12px;border:1px solid var(--border)">GitHub Actions</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">Wisdom quality check blocks PRs below 70%</td></tr>
+                <tr><td style="padding:7px 12px;border:1px solid var(--border)">Domain</td><td style="padding:7px 12px;border:1px solid var(--border)">myvoter.syswisdom.ai</td><td style="padding:7px 12px;border:1px solid var(--border);color:var(--muted)">Wix DNS CNAME → syswisdom.github.io</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<footer>
+    <div class="footer-links">
+        <a href="index.html">&#x2190; Predictions</a>
+        <a href="https://github.com/sysWisdom/myvoterwisdom" target="_blank">GitHub</a>
+        <a href="https://www.syswisdom.ai/post/we-did-it-myvoterwisdom-com-alpha-is-complete-electoral-ai-insights-platform" target="_blank">Launch Article</a>
+        <a href="https://github.com/sysWisdom/AIQualityManifesto" target="_blank">AI Quality Manifesto</a>
+        <a href="https://www.syswisdom.ai/data-quality-score" target="_blank">Data Quality Score</a>
+        <a href="mailto:info@syswisdom.ai">Contact</a>
+    </div>
+    <p>&copy; 2026 SysWisdom.AI &middot; BSD 3-Clause License &middot; Built with civic purpose in Georgia</p>
+</footer>
+
+</body>
+</html>

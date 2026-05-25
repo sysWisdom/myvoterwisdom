@@ -186,12 +186,15 @@
   > Statistical outlier detection flags this spread as anomalous, but it reflects real geographic
   > diversity in the data, not errors. The 73.8% score is appropriate for this dataset.
 
-### 4.5 Responsible AI Statement for syswisdom.ai
-- [ ] Write a one-page "About this project" page explaining:
+### 4.5 Responsible AI Statement & About Page — ✅ DONE
+- [x] Created `static/about.html` — full origin story, DQ score explanation, Responsible AI section, tech stack table
+  - Project origin: October 2024, SysWisdom Wisdom model validation experiment
+  - Alpha launch: February 2025 (link to syswisdom.ai announcement article)
+  - Why 73.8% is the honest score — geographic diversity, not bad data
   - Built as civic education, not for campaigns
-  - Open-source and free forever
-  - Data is historical public record only
-  - How to contribute or report concerns
+  - Open-source and free forever (BSD 3-Clause)
+  - How to contribute data via PR + Wisdom gate
+- [x] Added "About & Help" and "Our Story" backlinks to `static/index.html` footer
 
 ---
 
