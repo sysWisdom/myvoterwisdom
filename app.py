@@ -1,13 +1,41 @@
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 import subprocess
 import json
 import os
+import sys
 from dotenv import load_dotenv
 
 load_dotenv()  # reads .env if present; no-op in production where env vars are set directly
 
 app = Flask(__name__, static_folder='static')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32))
+
+# Allow requests from the GitHub Pages frontend
+CORS(app, origins=[
+    'https://myvoter.syswisdom.ai',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+])
+
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _ensure_model():
+    """Train the RF model if it hasn't been trained yet (first deploy or cold start)."""
+    model_path = os.path.join(_ROOT, 'model', 'rf_vote_model.pkl')
+    if not os.path.exists(model_path):
+        print('Model not found — training now...')
+        os.makedirs(os.path.join(_ROOT, 'model'), exist_ok=True)
+        from train_model import train_and_save_model
+        train_and_save_model(
+            os.path.join(_ROOT, 'data', 'voting_pres_data.csv'),
+            model_path,
+        )
+        print('Model trained and saved.')
+
+
+_ensure_model()
 
 @app.route('/')
 def index():
@@ -28,9 +56,10 @@ def predict():
     try:
         # Run the main_vote2028.py script with the provided state and county
         result = subprocess.run(
-            ['python', 'main_vote2028.py', county, state],
+            [sys.executable, os.path.join(_ROOT, 'main_vote2028.py'), county, state],
             capture_output=True,
-            text=True
+            text=True,
+            cwd=_ROOT,
         )
 
         # Debugging: Log the script output
@@ -42,7 +71,7 @@ def predict():
             return jsonify({"error": "Script execution failed", "details": result.stderr}), 500
 
         # Read the results from results.json
-        with open('results.json', 'r') as f:
+        with open(os.path.join(_ROOT, 'results.json'), 'r') as f:
             output = json.load(f)
 
         return jsonify(output)
@@ -53,4 +82,5 @@ def predict():
         return jsonify({"error": "An error occurred", "details": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

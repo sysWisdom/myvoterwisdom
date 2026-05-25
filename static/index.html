@@ -129,13 +129,19 @@
         </script>
     </div>        
     <script>
+        // When served from GitHub Pages, route API calls to the Render backend.
+        // When served from Flask directly (localhost or Render itself), use relative URLs.
+        const API_BASE = window.location.hostname === 'myvoter.syswisdom.ai'
+            ? 'https://myvoterwisdom.onrender.com'
+            : '';
+
         document.addEventListener('DOMContentLoaded', () => {
             const stateSelect = document.getElementById('stateSelect');
             const countySelect = document.getElementById('countySelect');
             const fetchPredictionButton = document.getElementById('fetchPrediction');
 
             // Fetch and populate state options
-            fetch('data/state.json') // Replace with the actual path to your states data
+            fetch(`${API_BASE}/data/state.json`)
                 .then(response => response.json())
                 .then(states => {
                     console.log("States fetched:", states); // Debugging: Log the fetched states
@@ -158,7 +164,7 @@
                 fetchPredictionButton.disabled = false;
 
                 // Fetch and populate county options based on selected state
-                fetch('data/county.json') // Replace with the actual path to your counties data
+                fetch(`${API_BASE}/data/county.json`)
                     .then(response => response.json())
                     .then(countiesByState => {
                         console.log("Counties fetched for state:", countiesByState); // Debugging: Log the fetched counties
@@ -190,7 +196,7 @@
             });
 
             function fetchPrediction(state, county) {
-                fetch(`/predict?state=${state}&county=${county}`) // Call the Flask backend
+                fetch(`${API_BASE}/predict?state=${state}&county=${county}`)
                     .then(response => response.json())
                     .then(data => {
                         const classificationReports = document.getElementById('classification-reports');
