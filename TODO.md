@@ -292,6 +292,107 @@
 
 ---
 
+---
+
+## Phase 6 — Data Expansion: MEDSL Presidential Pipeline
+
+> **Data scientist review — 2026-05-25**
+> Triggered by two observed behaviors in the live app:
+> - **Orange County, CA** — 4 models disagree (2 Dem / 2 Rep); accuracy numbers meaningless
+> - **Fulton County, GA** — "single class" warning; 100% Democratic every year in dataset
+>
+> Both are symptoms of the same root cause: the pipeline trains per-county on ≤ 6 rows.
+
+### Root Cause Analysis
+
+| Problem | Cause | Symptom |
+|---|---|---|
+| Single-class fallback (Fulton GA) | All 6 years are Democratic wins → `Democratic Wins` is always 1 | "100% likely Democratic" with no model trained |
+| Model disagreement (Orange County CA) | 6 rows → SMOTE → ~4 train / 2 test points → each model fits noise | RF + GB say Dem; LR + SVM say Rep; all show 50–100% "accuracy" |
+| Overfitting (100% RF accuracy) | Test set is 1–2 rows; any fit will score 100% | Reported accuracy is statistically meaningless |
+
+> **Key insight:** This is an architectural problem, not just a data-size problem.
+> The fix requires both more data (MEDSL) **and** a shift to a global model.
+
+### Current vs Target Architecture
+
+| | Current | Target (Phase 6) |
+|---|---|---|
+| Training scope | Per-county, ~6 rows | Global: all counties × 6 years (~18,600 rows) |
+| Test set size | 1–2 rows | Stratified 20% of 18,600 rows (~3,720 rows) |
+| Feature set | Democratic Vote Share, Republican Vote Share, Turnout | Same + State (encoded), County type, Year |
+| Single-class counties | Fallback to Laplace | Predicted by global model using cross-county patterns |
+| Accuracy validity | Meaningless (overfit) | Meaningful (proper held-out test set) |
+
+### MEDSL Data Source
+
+> **MIT Election Data and Science Lab — County Presidential Returns**
+> URL: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
+> License: CC BY 4.0 — free to use, redistribute, and build upon with attribution
+> Coverage: ~3,100 U.S. counties × elections 2000–2020; check for 2024 update
+> Format: CSV, ~500K rows (long format — one row per candidate per county per year)
+
+### Schema Mapping: MEDSL → voting_pres_data.csv
+
+| MEDSL Column | Our Column | Transform |
+|---|---|---|
+| `year` | `Election Year` | direct |
+| `state_po` | `State` | direct (2-letter code) |
+| `county_name` | `County` | normalize capitalization |
+| `candidatevotes` where `party_simplified == 'DEMOCRAT'` | `Democratic Votes` | pivot/groupby |
+| `candidatevotes` where `party_simplified == 'REPUBLICAN'` | `Republican Votes` | pivot/groupby |
+| `totalvotes` | `Total Voted` AND `Total Ballots Cast` | direct (MEDSL has no mail/in-person split) |
+| *(not in MEDSL)* | `Total Registered Voters` | nullable — set to 0 for MEDSL rows |
+| *(not in MEDSL)* | `Vote by Mail Ballots` | nullable — set to 0 for MEDSL rows |
+| *(not in MEDSL)* | `Vote Center Ballots` | nullable — set to 0 for MEDSL rows |
+
+> **Turnout feature impact:** `Turnout = Total Ballots Cast / Total Registered Voters`
+> MEDSL has no registration data. Options:
+> - [ ] **A (recommended):** Get EAVS (Election Assistance Commission) registration data,
+>   join on county FIPS — free download at https://www.eac.gov/research-and-data/election-administration-voting-survey
+> - [ ] **B (quick):** Drop `Turnout` as a feature for MEDSL rows; retain for our 39 counties
+> - [ ] **C (shortcut):** Use `Total Voted / median_county_pop` as a proxy (rough but usable)
+
+### Data Provenance Column
+
+Add a `Source` column to `voting_pres_data.csv`:
+- `manual` — current 39 counties (hand-curated, includes registration + mail/in-person)
+- `medsl` — rows imported from MEDSL CSV
+- `medsl+eavs` — MEDSL rows enriched with EAVS registration data
+
+### Integration Plan (Phased)
+
+- [ ] **Step 1 — Download MEDSL CSV** from Harvard Dataverse (free, no login required for CC BY datasets)
+- [ ] **Step 2 — Write `Fetch_County_Data.py` MEDSL importer:**
+  - Filter to `office == 'PRESIDENT'` and years 2004–2024
+  - Pivot from long (one row per candidate) to wide (one row per county-year)
+  - Normalize county names (title case, strip "County" suffix where inconsistent)
+  - Set `Total Registered Voters`, `Vote by Mail Ballots`, `Vote Center Ballots` = 0
+  - Set `Source = 'medsl'`
+  - Append to `voting_pres_data.csv`, deduplicating against existing 39 counties
+- [ ] **Step 3 — Recompute Wisdom flags** via `preprocess.py` `update_wisdom()` on full merged dataset
+- [ ] **Step 4 — Refactor `main_vote2028.py`** to train a global model (all counties, not just the target county)
+  - Features: `Democratic Vote Share`, `Republican Vote Share`, `Turnout` (0 where unavailable), `State` (one-hot), `Election Year`
+  - Target: `Democratic Wins` (1 = Dem plurality, 0 = Rep plurality)
+  - The per-county prediction becomes: train global model → predict using the target county's most recent features
+- [ ] **Step 5 — Update `app.py`** prediction endpoint to use the global model path
+- [ ] **Step 6 — Re-run Data Quality gate** on expanded CSV
+
+### Mandate Compliance Check
+
+> **Project mandate:** free, non-partisan, educational resource. No monetization. No political agenda.
+
+| Concern | Status |
+|---|---|
+| MEDSL data license (CC BY 4.0) | ✅ Compatible with BSD 3-Clause + educational use |
+| Attribution required | ✅ Add MEDSL citation to DISCLAIMER.md and About page |
+| Expanding to all U.S. counties | ✅ More geographic diversity = more educational value |
+| Presidential-only scope | ✅ Filter `office == 'PRESIDENT'` in importer — no other races in pipeline |
+| 2004–2024 date range | ✅ MEDSL covers 2000–2020; 2024 data from Dave's Redistricting or Ballotpedia if not yet in MEDSL |
+| Wisdom flag logic unchanged | ✅ Same 3-condition pivot logic; just applied to larger dataset |
+
+---
+
 ## Quick Wins (Do These First)
 
 - [x] Fix `requirements.txt` encoding (Phase 1.3)
