@@ -1,5 +1,6 @@
 ﻿flask==3.0.0
 flask-cors==4.0.0
+python-dotenv==1.2.1
 pandas==2.2.3
 scikit-learn==1.5.2
 imbalanced-learn==0.13.0

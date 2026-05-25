@@ -2,8 +2,12 @@ from flask import Flask, request, jsonify, send_from_directory
 import subprocess
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()  # reads .env if present; no-op in production where env vars are set directly
 
 app = Flask(__name__, static_folder='static')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(32))
 
 @app.route('/')
 def index():

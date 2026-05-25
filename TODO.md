@@ -12,7 +12,7 @@
 > | **Project ID** | `myvoterwisdom-497415` |
 > | **Project Name** | myvoterwisdom |
 > | **Project Number** | 291816933732 |
-> | **Account** | `aj@syswisdom.ai` |
+> | **Account** | `[redacted — see .env]` |
 > | **gcloud config** | ✅ Set and confirmed active |
 > | **ADC quota project** | ⚠️ Needs `gcloud auth application-default login` |
 

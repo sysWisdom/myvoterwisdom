@@ -1,6 +1,10 @@
 import requests
 import json
+import os
 from typing import Dict, List, Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class KingCountyVoterAPI:
     def __init__(self, app_token: str):
@@ -77,8 +81,13 @@ class KingCountyVoterAPI:
 
 # Example usage
 def main():
-    # Initialize the API client
-    app_token = "YOUR_APP_TOKEN_HERE"
+    # Initialize the API client — token loaded from .env (SOCRATA_APP_TOKEN)
+    app_token = os.environ.get('SOCRATA_APP_TOKEN', '')
+    if not app_token or app_token == 'YOUR_APP_TOKEN_HERE':
+        raise EnvironmentError(
+            'SOCRATA_APP_TOKEN is not set. '
+            'Register at https://dev.socrata.com/register and add it to .env'
+        )
     api = KingCountyVoterAPI(app_token)
     
     # Example: Get 2008 presidential results
