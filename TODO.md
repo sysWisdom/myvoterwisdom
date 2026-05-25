@@ -152,7 +152,10 @@
 - [x] Wix DNS CNAME: `myvoter` → `syswisdom.github.io` (1hr TTL)
 - [x] GitHub Actions deploy: `.github/workflows/deploy-pages.yml` (auto-deploys `static/` on push)
 - [x] **Live at https://myvoter.syswisdom.ai** — HTTPS enforced ✅ (2026-05-25)
-- [x] Render.com backend: `requirements-server.txt` fix applied — redeploy triggered (2026-05-25)
+- [x] Render.com backend: ✅ **LIVE** at https://myvoterwisdom.onrender.com (2026-05-25)
+  - Fixed: `requirements-server.txt` (no PyTorch/faiss)
+  - Fixed: `.python-version` → 3.11.9 (pre-built wheels, 15s build)
+  - Fixed: direct `main()` import instead of subprocess + results.json
 - ~~Set up Firebase Hosting~~ — superseded by GitHub Pages
 
 ### 4.3 Containerize the Flask App for Cloud Run
