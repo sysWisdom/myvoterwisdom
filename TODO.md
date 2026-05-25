@@ -595,3 +595,171 @@ Phase 7 goal:    aggregate county predictions → state winner → Electoral Col
 - [x] Add Disclaimer section to README (Phase 2.1)
 - [x] Upload data to Google Drive and open first notebook in Colab (Phase 3.2) — N/A, git clone approach is better
 - [x] GitHub public release complete — repo live at https://github.com/sysWisdom/myvoterwisdom
+
+---
+
+## Phase 8 — Canonical Schema & 3-Stage Data Pipeline
+
+> **Design goal:** Make the dataset reproducible, auditable, and citable.
+> Every row must have a traceable lineage from raw source to training feature.
+> Scope is deliberately narrow: **county-level presidential returns only.**
+> Narrow scope = higher data quality, better reproducibility, stronger public trust.
+
+### Canonical Schema (Design Intent)
+
+> This is the target logical schema. Current storage is wide CSV; this documents
+> what each column means and what a future SQLite/Parquet migration would look like.
+
+```sql
+CREATE TABLE presidential_county_results (
+    election_year   INTEGER,   -- 2000, 2004, ..., 2024
+    state_fips      TEXT,      -- 2-digit FIPS (e.g. '06' = CA)
+    county_fips     TEXT,      -- 5-digit FIPS (e.g. '06059' = Orange County CA)
+    county_name     TEXT,      -- normalized title case (e.g. 'Orange County')
+    state_abbrev    TEXT,      -- 2-letter postal (e.g. 'CA')
+    candidate_name  TEXT,      -- normalized (e.g. 'Biden, Joseph R.')
+    party           TEXT,      -- 'DEMOCRAT' | 'REPUBLICAN' | 'OTHER'
+    total_votes     INTEGER,   -- county total ballots cast
+    source          TEXT,      -- 'manual' | 'medsl' | 'county_repo' | 'medsl+eavs'
+    source_file     TEXT,      -- original filename ingested from (audit trail)
+    ingestion_hash  TEXT       -- SHA-256 of source_file at ingestion time
+);
+```
+
+**Key design decisions:**
+- `county_fips` is the canonical join key — use it for Census, EAVS, and TIGER/Line joins
+- `source` + `source_file` + `ingestion_hash` give complete data provenance per row
+- `ingestion_hash` lets CI detect if an upstream file changes between ingestions
+- Long format (one row per candidate per county-year) → wide format is a derived view
+
+**Tasks:**
+- [ ] Add `county_fips` column to `voting_pres_data.csv` (join MEDSL `county_fips` on existing rows)
+- [ ] Add `source_file` column — record original CSV filename for each ingested row
+- [ ] Add `ingestion_hash` column — SHA-256 of source file at ingestion time; compute in `Fetch_County_Data.py`
+- [ ] Update `Fetch_County_Data.py` to write `source_file` + `ingestion_hash` on MEDSL import
+- [ ] Document the schema in `DISCLAIMER.md` Data Dictionary section
+
+### Stage 1 — Raw Immutable Archive
+
+> **Rule: never edit files under `data/raw/`. They are append-only.**
+> Every source file is archived here exactly as downloaded.
+> This is the single source of truth for reproducibility audits.
+
+```
+data/raw/
+  2004/   ← future: state board CSVs if collected
+  2008/
+  2012/
+  2016/
+  2020/
+  2024/
+  medsl/  ← countypres_2000-2024.tab (already in data/medsl/, move here)
+```
+
+**Tasks:**
+- [ ] Create `data/raw/medsl/` and move `data/medsl/countypres_2000-2024.tab` there
+- [ ] Update `.gitignore` — `data/raw/` excluded (large files, downloaded at runtime)
+- [ ] Update `Fetch_County_Data.py` MEDSL path reference
+- [ ] Add `data/raw/` download instructions to README (one-time setup step)
+
+### Stage 2 — State Normalization
+
+> Every source file is converted to a canonical normalized form before any ML use.
+> Output: consistent columns, UTF-8 encoding, candidate name mapping, FIPS mapping.
+
+**Normalization rules (to codify in `preprocess.py`):**
+- County names: title case, strip "County" / "Parish" / "Borough" / "Census Area" suffix for join keys
+- Candidate names: map to `LastName, FirstName M.` canonical form (e.g. `Biden, Joseph R.`)
+- State: always 2-letter postal abbreviation
+- FIPS: zero-pad to 5 digits (e.g. `6059` → `06059`)
+- Encoding: all output UTF-8, no BOM
+
+**Tasks:**
+- [ ] Add `normalize_county_name(name)` utility to `preprocess.py` (extract from `validate_tier3.py` `_normalize()`)
+- [ ] Add `normalize_fips(fips)` utility — zero-pad to 5 digits
+- [ ] Add candidate name normalization map for 2004–2024 to `preprocess.py`
+- [ ] Write `data/normalized/` output path (parquet preferred; CSV acceptable)
+- [ ] Add `data/normalized/` to `.gitignore` (derived, reproducible from raw)
+
+### Stage 3 — Validation Layer
+
+> Automated checks run after every normalization. This is where the SysWisdom
+> AI/data-quality focus becomes technically differentiated from other open election projects.
+
+**Checks to implement (extend `tests/validate_tier3.py` or add `tests/validate_pipeline.py`):**
+- [ ] **County totals check** — sum of candidate votes ≤ total_votes for each county-year
+- [ ] **Statewide totals check** — sum of county totals within 1% of reported state total (use state-level data from MEDSL)
+- [ ] **Duplicate counties check** — no duplicate `(election_year, county_fips, party)` rows
+- [ ] **Missing FIPS check** — flag any row where `county_fips` is null or not 5 digits
+- [ ] **Turnout anomaly check** — flag counties where `total_votes / registered_voters` < 10% or > 95%
+- [ ] **Tier 2 vs Tier 3 divergence** — already in `tests/validate_tier3.py` (> 1% threshold)
+- [ ] Wire all checks into GitHub Actions CI — fail PR if any check exits non-zero
+
+### Geographic Reference: Census TIGER/Line
+
+> FIPS-keyed joins enable Census population, EAVS registration, and boundary data.
+
+| Purpose | Source | URL |
+|---|---|---|
+| County FIPS reference | Census TIGER/Line | https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html |
+| Population (for turnout denominator) | Census ACS 5-year | via `census` Python package |
+| Registered voters | EAVS (EAC) | https://www.eac.gov/research-and-data/election-administration-voting-survey |
+| County boundaries (mapping) | Census TIGER/Line shapefiles | same URL above |
+
+**Tasks:**
+- [ ] Download FIPS reference table (`county.csv` from Census) — static, ~3,200 rows
+- [ ] Add `data/raw/census/county_fips.csv` to repo (small, static, no license issues)
+- [ ] Use FIPS table to backfill `county_fips` on existing `manual` + `medsl` rows
+- [ ] (Optional) EAVS join: add `registered_voters` for MEDSL rows where available (Option A from Phase 6)
+
+---
+
+## Phase 9 — Per-County Election Data Quality Scoring
+
+> **The key differentiator:** Most open election projects ship raw data.
+> This project adds an AI-powered quality score per county — showing *why* a data point
+> is trustworthy or flagged, not just whether it exists.
+>
+> This aligns directly with the SysWisdom.ai positioning:
+> AI quality · reproducibility · trustworthiness · drift detection.
+
+### Concept
+
+Every county-year gets a quality score (0–100) with flagged issues:
+
+| County | Quality Score | Issues |
+|---|---|---|
+| Fulton GA | 98 | none |
+| Clark NV | 82 | precinct mismatch (Tier 2 vs Tier 3 > 1%) |
+| Broward FL | 74 | candidate name normalization issue |
+| House District 40 AK | 45 | geographic unit mismatch (district ≠ county) |
+
+**Score components:**
+
+| Dimension | Weight | Calculation |
+|---|---|---|
+| Source authority | 30% | `manual`=100, `medsl`=90, `county_repo`=70, estimated=40 |
+| Cross-tier consistency | 25% | 0% divergence = 100; > 5% divergence = 0 (linear) |
+| Completeness | 20% | non-null fields / total expected fields |
+| FIPS presence | 15% | county_fips present and valid = 100, else 0 |
+| Turnout plausibility | 10% | within 10%–85% range = 100; outside = 0 |
+
+### Implementation Tasks
+
+- [ ] Design `compute_county_dq_score(row)` function in `preprocess.py`
+  - Input: one row of `voting_pres_data.csv` + optional Tier 3 match
+  - Output: `{'score': int, 'issues': [str], 'dimensions': dict}`
+- [ ] Add `dq_score` and `dq_issues` columns to `voting_pres_data.csv` output
+- [ ] Write `tests/test_county_dq.py` — unit tests for score edge cases
+- [ ] Add `/county-dq/<state>/<county>` endpoint to `app.py` — returns score + issues JSON
+- [ ] Add County DQ card to `static/index.html` — show score badge alongside prediction
+- [ ] Update `static/about.html` — explain per-county scoring methodology
+- [ ] Generate `data/county_dq_scores.csv` at pipeline run time — all 1,956 counties pre-scored
+- [ ] Add county DQ scores to GitHub Actions CI output — summary table on every push
+
+### Why This Matters
+
+> Very few open election data projects do per-county quality scoring.
+> The ones that do (e.g. OpenElections) do it manually and inconsistently.
+> An automated, reproducible, AI-assisted scoring system is a genuine contribution
+> to civic data infrastructure — not just a feature, but a publishable methodology.
