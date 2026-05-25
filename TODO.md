@@ -485,6 +485,55 @@ Phase 7 goal:    aggregate county predictions → state winner → Electoral Col
 
 ---
 
+## Data Source Tier Architecture
+
+> **Design principle:** No single source is authoritative for all years and all counties.
+> The three tiers serve different purposes and should be combined, not substituted.
+
+| Tier | Dataset | Role | Coverage | Format | License |
+|---|---|---|---|---|---|
+| **Tier 1** | Manual curated (original 39 counties) | Gold standard with registration + mail-in data | 39 counties · 25 states · 2004–2024 | Wide CSV (hand-verified) | Internal |
+| **Tier 2** | MEDSL / Harvard Dataverse (`countypres_2000-2024.tab`) | Authoritative academic source | 1,956+ counties · 51 states · 2000–2024 | Long-format tab-delimited | CC BY 4.0 |
+| **Tier 3** | US County Level Election Results 2008–2024 (GitHub) | Fast operational / secondary validation | ~3,100 counties · 2008–2024 | Pre-normalized CSVs | Open |
+
+### Tier 3 — Fast Operational Dataset
+
+> **US County Level Election Results 2008–2024**
+> Pre-normalized county-level presidential results in ready-to-ingest CSV format.
+
+**Advantages over Tier 2 (MEDSL):**
+
+| Property | Tier 2 (MEDSL) | Tier 3 (County Results Repo) |
+|---|---|---|
+| Format | Long (one row per candidate per year) | Wide (one row per county per year) |
+| Ingestion complexity | Requires pivot + dedup | Direct append after column rename |
+| Guestbook / download gate | ✅ Required (Harvard Dataverse) | ❌ None — direct GitHub download |
+| File size | ~9.8 MB tab-delimited | Lightweight (multiple small CSVs) |
+| 2024 data | ✅ Included | ✅ Included |
+| Registration / turnout | ❌ Not available | ❌ Not available |
+| Academic citation | ✅ doi:10.7910/DVN/VOQCHQ | ⚠️ Community maintained |
+
+**Operational role in this project:**
+
+- **Secondary validation** — cross-check MEDSL vote totals for the same county-year; flag discrepancies > 1% as data quality issues
+- **Rapid ingestion layer** — for prototyping new features, swap MEDSL for Tier 3 to skip the pivot/dedup ETL
+- **2024 gap-fill** — if any county is in Tier 3 but missing from MEDSL's 2024 coverage, use Tier 3 as fill-in with `Source = 'county_repo'`
+- **Visualization prototyping** — lightweight enough to load in a Colab cell in seconds; ideal for notebooks/01_explore_data.ipynb
+
+**NOT a replacement for Tier 2 because:**
+- Community-maintained; no academic peer review or DOI
+- No citation chain suitable for a responsible AI/research context
+- Should not be primary training data; use as `Source = 'county_repo'` and weight accordingly
+
+**Integration tasks:**
+- [ ] Identify exact repository URL and verify license terms
+- [ ] Add `Source = 'county_repo'` provenance value to `voting_pres_data.csv` schema
+- [ ] Write validation script `tests/validate_tier3.py`: load Tier 3, join on (County, State, Year), compare `Democratic Votes` + `Republican Votes` to MEDSL — flag rows with > 1% divergence
+- [ ] Add Tier 3 as optional `data/county_repo/` directory in `.gitignore` (not committed; fetched at runtime like MEDSL)
+- [ ] Update `DISCLAIMER.md` with Tier 3 attribution once URL confirmed
+
+---
+
 ## Quick Wins (Do These First)
 
 - [x] Fix `requirements.txt` encoding (Phase 1.3)
