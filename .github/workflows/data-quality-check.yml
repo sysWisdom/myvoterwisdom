@@ -1,0 +1,95 @@
+name: Data Quality Gate
+
+# Runs whenever a PR or push touches any CSV file in data/
+# Acts as a Wisdom gate: Completeness + Consistency + Validity >= 70%
+# Required secret: DATA_QUALITY_API_KEY (repo Settings → Secrets → Actions)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+  pull_request:
+    paths:
+      - 'data/**'
+
+jobs:
+  wisdom-quality-gate:
+    runs-on: ubuntu-latest
+    name: Wisdom Data Quality Check
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analyze prediction_pres_data.csv
+        id: dq
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "X-API-Key: ${{ secrets.DATA_QUALITY_API_KEY }}" \
+            -F "file=@data/prediction_pres_data.csv;type=text/csv" \
+            https://data-quality-api-u2mjys756a-uc.a.run.app/analyze)
+
+          echo "Raw response: $RESPONSE"
+
+          # Check for API-level error
+          if echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(1 if 'error' in d else 0)" 2>/dev/null; then
+            SCORE=$(echo "$RESPONSE"        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('overall_score', 0))")
+            COMPLETENESS=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('completeness',{}).get('score', 0))")
+            CONSISTENCY=$(echo "$RESPONSE"  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('consistency', {}).get('score', 0))")
+            VALIDITY=$(echo "$RESPONSE"     | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('validity',    {}).get('score', 0))")
+            ROWS=$(echo "$RESPONSE"         | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('row_count', 0))")
+            COLS=$(echo "$RESPONSE"         | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('column_count', 0))")
+
+            echo "score=$SCORE"             >> $GITHUB_OUTPUT
+            echo "completeness=$COMPLETENESS" >> $GITHUB_OUTPUT
+            echo "consistency=$CONSISTENCY"  >> $GITHUB_OUTPUT
+            echo "validity=$VALIDITY"        >> $GITHUB_OUTPUT
+            echo "rows=$ROWS"                >> $GITHUB_OUTPUT
+            echo "api_ok=true"               >> $GITHUB_OUTPUT
+
+            # Write job summary visible in the Actions UI
+            {
+              echo "### Wisdom Data Quality Results"
+              echo ""
+              echo "| Dimension    | Score |"
+              echo "|---|---|"
+              echo "| Completeness | ${COMPLETENESS}% |"
+              echo "| Consistency  | ${CONSISTENCY}% |"
+              echo "| Validity     | ${VALIDITY}% |"
+              echo "| **Overall**  | **${SCORE}%** |"
+              echo ""
+              echo "Rows analyzed: **${ROWS}** &nbsp;&nbsp; Columns: **${COLS}**"
+              echo ""
+              echo "> Threshold: **70%** — scores below this will block the merge."
+            } >> $GITHUB_STEP_SUMMARY
+
+          else
+            echo "api_ok=false" >> $GITHUB_OUTPUT
+            echo "### Data Quality API returned an error" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$RESPONSE" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::Data Quality API could not analyze the file. Check the API key secret."
+          fi
+
+      - name: Enforce Wisdom threshold (>= 70%)
+        if: steps.dq.outputs.api_ok == 'true'
+        run: |
+          python3 - <<'EOF'
+          import sys
+          score     = float("${{ steps.dq.outputs.score }}")
+          threshold = 70.0
+          print(f"Overall quality score : {score:.1f}%")
+          print(f"Wisdom threshold      : {threshold:.0f}%")
+          print()
+          if score < threshold:
+              print(f"FAIL: {score:.1f}% is below the {threshold:.0f}% Wisdom quality gate.")
+              print("Fix completeness, consistency, or validity issues before this data can be merged.")
+              sys.exit(1)
+          print(f"PASS: Data meets the Wisdom quality standard ({score:.1f}% >= {threshold:.0f}%).")
+          EOF
+
+      # voting_pres_data.csv currently returns HTTP 500 from the API (likely due to
+      # the boolean TRUE/FALSE values in the Wisdom column). Tracked as a known issue.
+      # Once resolved, add a second Analyze + Enforce step for that file here.

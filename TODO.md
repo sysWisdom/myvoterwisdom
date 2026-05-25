@@ -183,6 +183,14 @@
 - [x] Add GitHub Topics: `election-data`, `open-data`, `civic-tech`, `machine-learning`, `education`
 - [x] Enable GitHub Discussions
 - [x] Add GitHub Actions CI — `.github/workflows/ci.yml` runs 3 tests on every push/PR
+- [x] Add GitHub Actions **Data Quality Gate** — `.github/workflows/data-quality-check.yml`
+  - Triggers on any PR or push that touches `data/`
+  - Calls SysWisdom Data Quality API (`prediction_pres_data.csv`)
+  - Fails merge if overall score < 70% (Completeness + Consistency + Validity)
+  - API key stored as GitHub Actions secret `DATA_QUALITY_API_KEY` (never in code)
+  - ⚠️ **Action required**: add `DATA_QUALITY_API_KEY` to repo Settings → Secrets → Actions
+  - ⚠️ Known: `voting_pres_data.csv` returns HTTP 500 from DQ API (boolean Wisdom column) — gate covers `prediction_pres_data.csv` only until resolved
+- [x] Updated `.gitignore` — `data/*.csv` and `data/reasoning/*.csv` explicitly allowed so contributors can submit new data via PR
 - [ ] Consider adding to [Code for America Brigade](https://brigade.codeforamerica.org/) or similar civic tech networks
 
 ---

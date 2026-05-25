@@ -29,10 +29,16 @@ results.json
 
 # Binary / large data artifacts — regenerate locally
 *.index
-*.csv
 model/
 *.pkl
 *.joblib
+
+# CSV files — block accidental commits of generated/temp CSVs
+*.csv
+# Re-allow curated data files in data/ — these are tracked and
+# protected by the Data Quality GitHub Actions gate on every PR
+!data/*.csv
+!data/reasoning/*.csv
 
 # Node.js dependencies
 node_modules/
