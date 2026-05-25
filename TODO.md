@@ -140,12 +140,16 @@
   Domain    → syswisdom.ai already owned — using myvoter subdomain ✅
   ```
 
-> **Render build fix (2026-05-25):** First deploy failed with "Exited status 1" because
-> `requirements.txt` includes `sentence-transformers==3.4.1` which pulls in PyTorch (~1.5 GB) —
-> too large for Render's free-tier build environment.
-> **Fix:** Created `requirements-server.txt` (Flask + scikit-learn only, no FAISS/PyTorch) and
-> updated `render.yaml` `buildCommand` to use it. The vector-store Q&A layer is not served by
-> the Flask API, so no functionality is lost on Render.
+> **End-to-end test confirmed ✅ 2026-05-25:** Orange County, CA prediction returned all 4 model
+> results via https://myvoter.syswisdom.ai — Wisdom Analysis card, model grid, Dem/Rep badges
+> all rendering correctly. RF + Gradient Boosting → Democratic; LR + SVM → Republican (2/4);
+> "Models disagree" consistency flag shown as expected for a genuinely contested county.
+>
+> **Render build fixes applied (2026-05-25):**
+> 1. `sentence-transformers` pulls PyTorch (~1.5 GB) → created `requirements-server.txt` without it
+> 2. `faiss-cpu==1.10.0` doesn't exist → updated to `1.14.2` in `requirements.txt`
+> 3. Python 3.14 default has no pre-built wheels → pinned `3.11.9` via `.python-version`
+> 4. subprocess + `results.json` was fragile on ephemeral filesystem → `main()` now returns dict directly
 
 ### 4.2 Domain & Hosting ✅
 - [x] `syswisdom.ai` domain already owned — using subdomain `myvoter.syswisdom.ai`
@@ -159,17 +163,10 @@
 - ~~Set up Firebase Hosting~~ — superseded by GitHub Pages
 
 ### 4.3 Containerize the Flask App for Cloud Run
-- [ ] Create a `Dockerfile`:
-  ```dockerfile
-  FROM python:3.11-slim
-  WORKDIR /app
-  COPY requirements.txt .
-  RUN pip install -r requirements.txt
-  COPY . .
-  CMD ["python", "app.py"]
-  ```
-- [ ] Test locally with Docker
-- [ ] Deploy to Cloud Run: `gcloud run deploy wisdomai --source .`
+> ⏭️ **Superseded by Render.com** — free tier is live and working. Dockerfile/Cloud Run
+> only needed if traffic grows beyond Render free limits or GCloud billing is resolved.
+- [ ] (Optional) Create `Dockerfile` using `python:3.11-slim` + `requirements-server.txt`
+- [ ] (Optional) Deploy to Cloud Run: `gcloud run deploy wisdomai --source .`
 
 ### 4.4 Responsible AI Statement for syswisdom.ai
 - [ ] Write a one-page "About this project" page explaining:
