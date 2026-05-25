@@ -64,7 +64,7 @@
 > - Cherokee, Clark County, Sussex County — mixed swing-county factors
 > - **House District 40 (AK)** — see Alaska Borough Note below
 
-### ⚠️ Alaska Geographic Unit — Requires Resolution
+### ✅ Alaska Geographic Unit — Resolved (Option A)
 > **Background:** Alaska does not have counties. When Alaska drafted its constitution (1955–1956
 > Constitutional Convention), delegates intentionally rejected the county system to avoid overlapping
 > tax jurisdictions, government duplication, and rigid boundaries in a sparsely populated state with
@@ -92,16 +92,12 @@
 > Small registration (~9,000), rural voting pattern, and the 2016 Democratic lean suggest this is
 > a rural district in the **Matanuska-Susitna Borough** (Mat-Su Valley, north of Anchorage).
 >
-> **Resolution options (choose one):**
-> - [ ] **Option A — Rename to borough:** Change `County` field from `House District 40` to
->   `Matanuska-Susitna Borough` (verify HD40 boundary → borough mapping first)
-> - [ ] **Option B — Replace with full borough data:** Pull Matanuska-Susitna Borough presidential
->   results 2004–2024 from Alaska Division of Elections and replace the 5 rows
-> - [ ] **Option C — Exclude Alaska:** Remove the 5 rows and note in DISCLAIMER.md that Alaska
->   uses boroughs, not counties, and is excluded from v1.0 of the dataset
+> **Resolution:** ✅ **Option A applied (2026-05-25):** Renamed `County` field from
+> `House District 40` → `Matanuska-Susitna Borough` in `data/voting_pres_data.csv` (5 rows).
 >
-> **Recommended:** Option B — full borough data gives the correct geographic unit and more
-> representative vote totals. Alaska Division of Elections: https://www.elections.alaska.gov
+> **Future improvement (Option B):** Replace these 5 rows with full Matanuska-Susitna Borough
+> presidential results from the Alaska Division of Elections (https://www.elections.alaska.gov)
+> to get accurate borough-wide vote totals rather than a single legislative district's figures.
 
 ### Data Expansion Recommendations
 > To expand beyond 39 counties and improve ML robustness, the best FREE source is:
