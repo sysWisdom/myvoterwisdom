@@ -1,5 +1,5 @@
-"""
-Fetch_County_Data.py — MEDSL Presidential County Returns Importer
+﻿"""
+Fetch_County_Data.py â€” MEDSL Presidential County Returns Importer
 =================================================================
 Downloads and merges MIT Election Data and Science Lab (MEDSL)
 county-level presidential returns into voting_pres_data.csv.
@@ -11,7 +11,7 @@ Data source (CC BY 4.0):
 Usage:
   1. Download countypres_2000-2024.tab from Harvard Dataverse:
        https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
-     Click "Access Dataset" → fill guestbook (name/email/institution) → download .tab file
+     Click "Access Dataset" â†’ fill guestbook (name/email/institution) â†’ download .tab file
   2. Place the file at:  data/medsl/countypres_2000-2024.tab
   3. Run:  python Fetch_County_Data.py
 
@@ -53,7 +53,7 @@ def load_medsl(path: str) -> pd.DataFrame:
             f"\nMEDSL file not found: {path}\n\n"
             "Download instructions:\n"
             "  1. Go to https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ\n"
-            "  2. Click 'Access Dataset' → fill guestbook form\n"
+            "  2. Click 'Access Dataset' â†’ fill guestbook form\n"
             "  3. Download 'countypres_2000-2024.tab'\n"
             f"  4. Place it at: {path}\n"
         )
@@ -69,8 +69,9 @@ def filter_and_pivot(df: pd.DataFrame) -> pd.DataFrame:
     and pivot from long (one row per candidate) to wide (one row per county-year).
     """
     # Step 1: presidential only, target years only
+    # MEDSL uses 'US PRESIDENT' as the office label
     df = df[
-        (df['office'].str.upper() == 'PRESIDENT') &
+        (df['office'].str.upper().isin(['PRESIDENT', 'US PRESIDENT'])) &
         (df['year'].isin(TARGET_YEARS))
     ].copy()
     print(f"  After office+year filter: {len(df):,} rows")
@@ -96,8 +97,8 @@ def filter_and_pivot(df: pd.DataFrame) -> pd.DataFrame:
         print(f"  Summing {len(non_total_only):,} rows from counties without TOTAL mode")
     df = pd.concat([total_rows, non_total_only], ignore_index=True)
 
-    # Step 3: standardise party labels → DEMOCRAT / REPUBLICAN / OTHER
-    df['party_std'] = df['party'].str.upper().str.strip()
+    # Step 3: standardise party labels â†’ DEMOCRAT / REPUBLICAN / OTHER
+    df['party_std'] = df['party'].fillna('OTHER').str.upper().str.strip()
     df['party_std'] = df['party_std'].apply(
         lambda p: 'DEMOCRAT' if 'DEMOCRAT' in p else ('REPUBLICAN' if 'REPUBLICAN' in p else 'OTHER')
     )
@@ -250,108 +251,8 @@ def main():
 
     size_kb = os.path.getsize(OUTPUT_PATH) / 1024
     print(f"\n  File size: {size_kb:.0f} KB")
-    print("\nDone. ✓")
+    print("\nDone. âœ“")
 
 
 if __name__ == '__main__':
-    main()
-
-    def __init__(self, app_token: str):
-        """
-        Initialize the King County Voter API client
-        
-        Args:
-            app_token (str): Your Socrata API token
-        """
-        self.base_url = "https://data.kingcounty.gov"
-        self.headers = {
-            'X-App-Token': app_token,
-            'Content-Type': 'application/json'
-        }
-    
-    def get_election_results(self, dataset_id: str, params: Optional[Dict] = None) -> Dict:
-        """
-        Get election results from a specific dataset
-        
-        Args:
-            dataset_id (str): The Socrata dataset identifier
-            params (dict): Query parameters for filtering results
-            
-        Returns:
-            dict: JSON response from the API
-        """
-        url = f"{self.base_url}/resource/{dataset_id}.json"
-        
-        try:
-            response = requests.get(url, headers=self.headers, params=params)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching data: {e}")
-            return None
-    
-    def get_voter_info(self, precinct: str) -> Dict:
-        """
-        Get voter information for a specific precinct
-        
-        Args:
-            precinct (str): Precinct identifier
-            
-        Returns:
-            dict: Voter information for the precinct
-        """
-        params = {
-            '$where': f"precinct='{precinct}'",
-            '$limit': 1000
-        }
-        # Note: You'll need to replace with the correct dataset ID
-        return self.get_election_results('dataset-id-here', params)
-    
-    def get_presidential_results(self, year: int) -> Dict:
-        """
-        Get presidential election results for a specific year
-        
-        Args:
-            year (int): Election year
-            
-        Returns:
-            dict: Presidential election results
-        """
-        # Map of known dataset IDs for presidential elections
-        dataset_map = {
-            2008: 'av7y-ibxs',  # Example ID - replace with actual
-            # Add more years as needed
-        }
-        
-        if year not in dataset_map:
-            raise ValueError(f"No dataset available for year {year}")
-            
-        return self.get_election_results(dataset_map[year])
-
-# Example usage
-def main():
-    # Initialize the API client — token loaded from .env (SOCRATA_APP_TOKEN)
-    app_token = os.environ.get('SOCRATA_APP_TOKEN', '')
-    if not app_token or app_token == 'YOUR_APP_TOKEN_HERE':
-        raise EnvironmentError(
-            'SOCRATA_APP_TOKEN is not set. '
-            'Register at https://dev.socrata.com/register and add it to .env'
-        )
-    api = KingCountyVoterAPI(app_token)
-    
-    # Example: Get 2008 presidential results
-    results = api.get_presidential_results(2008)
-    
-    if results:
-        # Process and format the results
-        formatted_results = {
-            "Election Year": 2008,
-            "State": "Washington",
-            "County": "King",
-            "Democratic Votes": sum(int(r['votes']) for r in results if 'Obama' in r.get('candidate', '')),
-            "Republican Votes": sum(int(r['votes']) for r in results if 'McCain' in r.get('candidate', '')),
-        }
-        print(json.dumps(formatted_results, indent=2))
-
-if __name__ == "__main__":
     main()
