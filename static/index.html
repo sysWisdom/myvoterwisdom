@@ -169,6 +169,63 @@
         .dq-btn:hover     { background: #047857; }
         .dq-btn:disabled  { background: #9ca3af; cursor: not-allowed; }
 
+        /* ELECTORAL COLLEGE */
+        .ec-btn {
+            background: #7c3aed; color: #fff; border: none;
+            padding: 12px 28px; border-radius: 8px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; transition: background .2s;
+        }
+        .ec-btn:hover    { background: #6d28d9; }
+        .ec-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        .ec-tally {
+            display: flex; align-items: stretch; border-radius: 12px;
+            overflow: hidden; height: 56px; margin: 20px 0; font-weight: 700;
+            font-size: 1.1rem;
+        }
+        .ec-tally .dem {
+            background: #1d4ed8; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            transition: width .6s ease;
+        }
+        .ec-tally .rep {
+            background: #b91c1c; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            transition: width .6s ease;
+        }
+        .ec-tally .mid {
+            background: #6b7280; color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            min-width: 48px; font-size: .8rem; writing-mode: vertical-rl;
+        }
+        .ec-total { text-align: center; font-size: .85rem; color: var(--muted); margin-bottom: 16px; }
+        .state-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+            gap: 8px; margin-top: 16px;
+        }
+        .state-tile {
+            border-radius: 8px; padding: 8px 6px; text-align: center;
+            font-size: .78rem; line-height: 1.4;
+        }
+        .state-tile.dem { background: #dbeafe; border: 2px solid #1d4ed8; }
+        .state-tile.rep { background: #fee2e2; border: 2px solid #b91c1c; }
+        .state-tile .st-code { font-weight: 700; font-size: 1rem; }
+        .state-tile.dem .st-code { color: #1d4ed8; }
+        .state-tile.rep .st-code { color: #b91c1c; }
+        .state-tile .st-ec  { font-weight: 600; color: #374151; }
+        .state-tile .st-mrg { color: var(--muted); font-size: .72rem; }
+        .swing-list { margin-top: 16px; }
+        .swing-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 6px 10px; border-radius: 6px; margin-bottom: 4px;
+            background: #f9fafb; border: 1px solid var(--border);
+            font-size: .85rem;
+        }
+        .swing-item .sw-loc { font-weight: 600; }
+        .swing-item .sw-d   { color: #1d4ed8; font-weight: 700; }
+        .swing-item .sw-r   { color: #b91c1c; font-weight: 700; }
+        .swing-item .sw-mrg { color: var(--muted); }
+
         /* FOOTER */
         footer { background: var(--dark); color: #9ca3af; text-align: center; padding: 24px; font-size: .85rem; }
         footer a { color: #a5b4fc; text-decoration: none; }
@@ -180,7 +237,7 @@
 
 <header>
     <h1>MyVoterWisdom</h1>
-    <p>2028 presidential county projections &middot; trained on 2004&ndash;2024 historical data &middot; 39 counties &middot; 25 states</p>
+    <p>2028 presidential county projections &middot; trained on 2004&ndash;2024 historical data &middot; 1,956 counties &middot; 51 states</p>
     <div class="badges">
         <a href="https://github.com/sysWisdom/myvoterwisdom" target="_blank">
             <img src="https://img.shields.io/badge/GitHub-sysWisdom%2Fmyvoterwisdom-blue?logo=github" alt="GitHub">
@@ -286,6 +343,39 @@
         <button id="runDQCheck" class="dq-btn">&#x1F50D; Check Data Quality</button>
         <p id="dq-loading" style="display:none;margin-top:12px;font-style:italic;color:var(--muted)">Analyzing prediction dataset&hellip;</p>
         <div id="dq-result" style="display:none;margin-top:20px"></div>
+    </div>
+
+    <!-- ELECTORAL COLLEGE PROJECTION (Phase 7) -->
+    <div class="card">
+        <h2>&#x1F5FA;&#xFE0F; 2028 Electoral College Projection</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
+            Runs the global Random Forest model over all 1,956 counties, aggregates
+            projected county winners to state level, then maps to Electoral College votes.
+            270 electoral votes needed to win. Historical data only &mdash; not a forecast.
+        </p>
+        <button id="runEC" class="ec-btn">&#x25B6; Run EC Projection</button>
+        <p id="ec-loading" style="display:none;margin-top:12px;font-style:italic;color:var(--muted)">
+            Computing county predictions&hellip; this may take up to 30 s on first run.
+        </p>
+        <div id="ec-result" style="display:none;margin-top:20px">
+            <div class="ec-tally" id="ec-bar">
+                <div class="dem" id="ec-dem-bar" style="width:50%">Dem <span id="ec-dem-n">0</span></div>
+                <div class="mid">270</div>
+                <div class="rep" id="ec-rep-bar" style="width:50%"><span id="ec-rep-n">0</span> Rep</div>
+            </div>
+            <p class="ec-total" id="ec-winner-line"></p>
+
+            <h3 style="margin:20px 0 8px;font-size:1rem">&#x1F4CD; Top Swing Counties (margin &lt; 5%)</h3>
+            <div class="swing-list" id="swing-list"></div>
+
+            <h3 style="margin:20px 0 8px;font-size:1rem">&#x1F5FA;&#xFE0F; State-by-State Results</h3>
+            <div class="state-grid" id="state-grid"></div>
+
+            <p style="margin-top:16px;font-size:.75rem;color:var(--muted)">
+                <em>Maine &amp; Nebraska shown as winner-take-all for simplicity.
+                Model accuracy: ~99.9% on 3,831-row global test set (RF).</em>
+            </p>
+        </div>
     </div>
 
     <!-- ABOUT -->
@@ -526,6 +616,94 @@
         }
 
         dqResult.innerHTML = html;
+    }
+
+    // ── Electoral College Projection ──────────────────────────────────────────
+    const ecBtn    = document.getElementById('runEC');
+    const ecLoad   = document.getElementById('ec-loading');
+    const ecResult = document.getElementById('ec-result');
+
+    ecBtn.addEventListener('click', () => {
+        ecBtn.disabled = true;
+        ecLoad.style.display = 'block';
+        ecResult.style.display = 'none';
+
+        fetch(`${API_BASE}/predict-ec`)
+            .then(r => r.json())
+            .then(data => {
+                ecLoad.style.display = 'none';
+                ecBtn.disabled = false;
+                if (data.error) {
+                    ecResult.innerHTML = `<p style="color:#dc2626">&#x26A0;&#xFE0F; ${data.error}: ${data.details || ''}</p>`;
+                    ecResult.style.display = 'block';
+                    return;
+                }
+                renderEC(data);
+                ecResult.style.display = 'block';
+                ecResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            })
+            .catch(err => {
+                ecLoad.style.display = 'none';
+                ecBtn.disabled = false;
+                ecResult.innerHTML = '<p style="color:#dc2626">&#x26A0;&#xFE0F; Service unavailable &mdash; server may be warming up. Try again in a moment.</p>';
+                ecResult.style.display = 'block';
+                console.error(err);
+            });
+    });
+
+    function renderEC(data) {
+        const totals = data.totals  || {};
+        const states = data.states  || {};
+        const swings = data.swing_counties || [];
+        const totalEC = totals.total_ec || 538;
+        const demEC   = totals.dem_ec   || 0;
+        const repEC   = totals.rep_ec   || 0;
+
+        // EC bar
+        const demPct = (demEC / totalEC * 100).toFixed(1);
+        const repPct = (repEC / totalEC * 100).toFixed(1);
+        document.getElementById('ec-dem-bar').style.width = demPct + '%';
+        document.getElementById('ec-rep-bar').style.width = repPct + '%';
+        document.getElementById('ec-dem-n').textContent  = demEC;
+        document.getElementById('ec-rep-n').textContent  = repEC;
+
+        const winner270 = demEC >= 270 ? 'Democratic' : (repEC >= 270 ? 'Republican' : 'No majority');
+        const winColor  = demEC >= 270 ? '#1d4ed8' : '#b91c1c';
+        document.getElementById('ec-winner-line').innerHTML =
+            `<strong style="color:${winColor}">${winner270} majority</strong> &mdash; ${demEC} Dem / ${repEC} Rep (270 needed)`;
+
+        // Swing counties
+        const swingEl = document.getElementById('swing-list');
+        if (swings.length === 0) {
+            swingEl.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No swing counties found.</p>';
+        } else {
+            swingEl.innerHTML = swings.map(s => {
+                const cls = s.predicted === 'D' ? 'sw-d' : 'sw-r';
+                const lbl = s.predicted === 'D' ? 'Dem' : 'Rep';
+                return `<div class="swing-item">
+                    <span class="sw-loc">${s.county}, ${s.state}</span>
+                    <span class="${cls}">${lbl}</span>
+                    <span class="sw-mrg">${s.margin_pct.toFixed(1)}% margin</span>
+                </div>`;
+            }).join('');
+        }
+
+        // State grid — sorted Dem first (by EC votes desc), then Rep
+        const stateGrid = document.getElementById('state-grid');
+        const stateList = Object.entries(states)
+            .sort((a, b) => {
+                if (a[1].winner !== b[1].winner) return a[1].winner === 'D' ? -1 : 1;
+                return b[1].ec_votes - a[1].ec_votes;
+            });
+        stateGrid.innerHTML = stateList.map(([code, s]) => {
+            const cls = s.winner === 'D' ? 'dem' : 'rep';
+            const lbl = s.winner === 'D' ? 'Dem' : 'Rep';
+            return `<div class="state-tile ${cls}">
+                <div class="st-code">${code}</div>
+                <div class="st-ec">${s.ec_votes} EV &middot; ${lbl}</div>
+                <div class="st-mrg">${s.margin_pct}% margin</div>
+            </div>`;
+        }).join('');
     }
 </script>
 </body>

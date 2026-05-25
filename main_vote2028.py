@@ -227,6 +227,113 @@ def main(county_name: str, state_name: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Phase 7 — Electoral College aggregation
+# ---------------------------------------------------------------------------
+
+# 2024 apportionment (based on 2020 Census); Maine + Nebraska treated as
+# winner-take-all for simplicity (standard educational simplification).
+_EC_VOTES: dict = {
+    'AL': 9,  'AK': 3,  'AZ': 11, 'AR': 6,  'CA': 54, 'CO': 10, 'CT': 7,
+    'DE': 3,  'FL': 30, 'GA': 16, 'HI': 4,  'ID': 4,  'IL': 19, 'IN': 11,
+    'IA': 6,  'KS': 6,  'KY': 8,  'LA': 8,  'ME': 4,  'MD': 10, 'MA': 11,
+    'MI': 15, 'MN': 10, 'MS': 6,  'MO': 10, 'MT': 4,  'NE': 5,  'NV': 6,
+    'NH': 4,  'NJ': 14, 'NM': 5,  'NY': 28, 'NC': 16, 'ND': 3,  'OH': 17,
+    'OK': 7,  'OR': 8,  'PA': 19, 'RI': 4,  'SC': 9,  'SD': 3,  'TN': 11,
+    'TX': 40, 'UT': 6,  'VT': 3,  'VA': 13, 'WA': 12, 'WV': 4,  'WI': 10,
+    'WY': 3,  'DC': 3,
+}
+
+
+def predict_all_counties() -> dict:
+    """
+    Run the Random Forest model over every county (most recent year),
+    aggregate to state level, then map to Electoral College votes.
+
+    Returns:
+    {
+      "states": {
+        "CA": {"winner": "D", "ec_votes": 54, "dem_votes": …, "rep_votes": …, "margin_pct": 12.5},
+        …
+      },
+      "totals":        {"dem_ec": 312, "rep_ec": 226, "unassigned_ec": 0},
+      "swing_counties": [{"county": …, "state": …, "margin_pct": …, "predicted": "D"}, …]
+    }
+    """
+    if _cache["models"] is None:
+        _train_global_models()
+
+    rf           = _cache["models"]["Random Forest"]
+    df_raw       = _cache["df_raw"]
+    feature_df   = _cache["df_features"]
+    feature_cols = _cache["feature_cols"]
+
+    # Index of the most-recent-year row for each (State, County) pair
+    latest_idx = (
+        df_raw.groupby(['State', 'County'])['Election Year']
+        .idxmax()
+        .values
+    )
+
+    X_all = feature_df.loc[latest_idx, feature_cols].values
+    preds = rf.predict(X_all)   # 1 = Dem, 0 = Rep
+
+    # Build county-level result frame
+    rows = df_raw.loc[latest_idx].copy().reset_index(drop=True)
+    rows['Predicted'] = preds
+    rows['Total_Voted'] = rows['Total Voted'].replace(0, np.nan)
+    rows['Margin_Pct'] = (
+        (rows['Democratic Votes'] - rows['Republican Votes']).abs()
+        / rows['Total_Voted'] * 100
+    ).round(2)
+
+    # Swing counties: historical margin < 5 % AND data available
+    swing_df = rows[rows['Margin_Pct'] < 5].nsmallest(25, 'Margin_Pct')
+    swing_counties = [
+        {
+            "county":      r['County'],
+            "state":       r['State'],
+            "margin_pct":  float(r['Margin_Pct']),
+            "predicted":   "D" if r['Predicted'] == 1 else "R",
+        }
+        for _, r in swing_df.iterrows()
+        if not pd.isna(r['Margin_Pct'])
+    ]
+
+    # Aggregate to state: sum votes for counties the model assigns to each party
+    state_results: dict = {}
+    for state, grp in rows.groupby('State'):
+        dem_rows = grp[grp['Predicted'] == 1]
+        rep_rows = grp[grp['Predicted'] == 0]
+        dem_votes = int(dem_rows['Democratic Votes'].sum())
+        rep_votes = int(rep_rows['Republican Votes'].sum())
+        total = dem_votes + rep_votes
+        if total > 0:
+            winner    = 'D' if dem_votes > rep_votes else 'R'
+            margin_pct = round(abs(dem_votes - rep_votes) / total * 100, 1)
+        else:
+            winner     = 'R'
+            margin_pct = 0.0
+        state_results[state] = {
+            "winner":     winner,
+            "ec_votes":   _EC_VOTES.get(state, 0),
+            "dem_votes":  dem_votes,
+            "rep_votes":  rep_votes,
+            "margin_pct": margin_pct,
+        }
+
+    dem_ec = sum(v['ec_votes'] for v in state_results.values() if v['winner'] == 'D')
+    rep_ec = sum(v['ec_votes'] for v in state_results.values() if v['winner'] == 'R')
+    # States with ec_votes=0 are territories not covered by EC (not applicable here)
+    total_ec = sum(_EC_VOTES.values())   # 538
+
+    return {
+        "states":         state_results,
+        "totals":         {"dem_ec": dem_ec, "rep_ec": rep_ec, "total_ec": total_ec},
+        "swing_counties": swing_counties,
+    }
+
+
+# ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":

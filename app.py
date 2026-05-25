@@ -61,6 +61,24 @@ def predict():
         print(f"Exception occurred: {e}")
         return jsonify({"error": "An error occurred", "details": str(e)}), 500
 
+
+@app.route('/predict-ec', methods=['GET'])
+def predict_ec():
+    """
+    Run the global model over every county in the dataset and return
+    state-by-state Electoral College projections.
+    Heavy on first call (~15-30 s cold start); subsequent calls use the
+    module-level cache and return in < 1 s.
+    """
+    try:
+        from main_vote2028 import predict_all_counties
+        output = predict_all_counties()
+        return jsonify(output)
+    except Exception as e:
+        print(f"EC projection error: {e}")
+        return jsonify({"error": "EC projection failed", "details": str(e)}), 500
+
+
 @app.route('/data-quality', methods=['GET'])
 def data_quality():
     """Proxy to the SysWisdom Data Quality API. Key never leaves the server."""
