@@ -118,11 +118,13 @@
 - ~~Upload `data/` folder to Google Drive~~
 - ~~Update all data paths to use the Drive mount pattern above~~
 
-### 3.3 How to Run for Free (Step-by-Step)
+### 3.3 How to Run for Free (Step-by-Step) ✅
 1. Go to [colab.research.google.com](https://colab.research.google.com)
 2. File → Open notebook → GitHub → paste the repo URL
 3. Runtime → Change runtime type → T4 GPU (free)
 4. Run notebooks top-to-bottom
+
+> **Confirmed working 2026-05-25** — all 3 notebooks open and execute end-to-end in Colab.
 
 ---
 
