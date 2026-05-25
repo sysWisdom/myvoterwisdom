@@ -277,7 +277,16 @@
   - Fails merge if overall score < 70% (Completeness + Consistency + Validity)
   - API key stored as GitHub Actions secret `DATA_QUALITY_API_KEY` (never in code)
   - ✅ `DATA_QUALITY_API_KEY` added to repo Settings → Secrets → Actions (2026-05-25)
-  - ⚠️ Known: `voting_pres_data.csv` returns HTTP 500 from DQ API (boolean Wisdom column) — gate covers `prediction_pres_data.csv` only until resolved
+  - ✅ **`voting_pres_data.csv` HTTP 500 fixed (2026-05-25):** Wisdom column converted from
+    `TRUE`/`FALSE` strings → `1`/`0` integers. DQ API now returns 200 on this file.
+  - ⚠️ **`voting_pres_data.csv` scores 65%** (below 70% gate threshold):
+    - Completeness: 100% | Consistency: 100% | **Validity: 0%**
+    - 7 columns flagged for outliers (geographic diversity: Glacier MT 5K ballots vs Harris TX 1.7M)
+    - `Wisdom` binary column also flagged — API treats 0/1 as numeric and flags 18% False as outlier
+    - **This is the honest score for 39 geographically diverse counties; not bad data**
+    - Gate remains on `prediction_pres_data.csv` (73.8%) until Phase 6 expansion
+  - **After Phase 6 (3,100 counties):** validity score expected to improve — rural and urban
+    counties both become part of the normal distribution, reducing individual outlier flags
 - [x] Updated `.gitignore` — `data/*.csv` and `data/reasoning/*.csv` explicitly allowed so contributors can submit new data via PR
 - [x] **Civic Tech Discovery** — researched Code for America Brigade and similar networks (2026-05-25)
   - **GitHub `civic-tech` topic** ✅ already set — repo appears in github.com/topics/civic-tech (1,296+ repos, auto-indexed)

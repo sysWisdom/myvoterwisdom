@@ -5,8 +5,11 @@ def load_data(file_path):
     try:
         df = pd.read_csv(file_path, encoding='utf-8-sig')  # utf-8-sig strips BOM
         df['Election Year'] = df['Election Year'].astype(int)
+        # Wisdom is stored as 1/0 integers in the CSV; normalise to bool regardless of source format
         if df['Wisdom'].dtype == object:
-            df['Wisdom'] = df['Wisdom'].map({'True': True, 'False': False}).astype(bool)
+            df['Wisdom'] = df['Wisdom'].map({'True': True, 'False': False, 'TRUE': True, 'FALSE': False}).astype(bool)
+        else:
+            df['Wisdom'] = df['Wisdom'].astype(bool)
         return df
     except Exception as e:
         print(f"Error loading data: {e}")
