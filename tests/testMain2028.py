@@ -3,6 +3,8 @@ import subprocess
 import json
 import os
 
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
 class TestMain2028(unittest.TestCase):
     def test_main_vote2028(self):
         state = "CA"
@@ -10,9 +12,10 @@ class TestMain2028(unittest.TestCase):
 
         # Run the main_vote2028.py script with the provided state and county
         result = subprocess.run(
-            ['python', '../main_vote2028.py', county, state],
+            ['python', os.path.join(_ROOT, 'main_vote2028.py'), county, state],
             capture_output=True,
-            text=True
+            text=True,
+            cwd=_ROOT
         )
 
         # Print the output and error messages for debugging
@@ -23,10 +26,11 @@ class TestMain2028(unittest.TestCase):
         self.assertEqual(result.returncode, 0, f"Script failed with error: {result.stderr}")
 
         # Verify that results.json was created
-        self.assertTrue(os.path.exists('../results.json'), "results.json file was not created")
+        results_path = os.path.join(_ROOT, 'results.json')
+        self.assertTrue(os.path.exists(results_path), "results.json file was not created")
 
         # Load the results.json file
-        with open('../results.json', 'r') as f:
+        with open(results_path, 'r') as f:
             output = json.load(f)
 
         # Verify the structure of the output

@@ -8,6 +8,7 @@ from imblearn.over_sampling import SMOTE
 import numpy as np
 import json
 import sys
+import os
 from preprocess import load_data, add_filter_columns, compare_votes_and_ballots, update_wisdom, prepare_features_and_target
 
 def laplace_law_of_succession(wins, total_elections):
@@ -15,7 +16,7 @@ def laplace_law_of_succession(wins, total_elections):
 
 def main(county_name, state_name):
     # Load the dataset
-    data_path = 'c:/Users/macki/Documents/VS Studio Code/WisdomAI_2020/data/voting_pres_data.csv'
+    data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'voting_pres_data.csv')
     df = load_data(data_path)
     if df is None:
         return

@@ -7,7 +7,8 @@
         "Marengo County"
     ],
     "AZ": [
-        "Maricopa County"
+        "Maricopa County",
+        "Pima County"
     ],
     "CA": [
         "Orange County",
@@ -56,6 +57,9 @@
     "NC": [
         "Mecklenburg County"
     ],
+    "NM": [
+        "Valencia County"
+    ],
     "NV": [
         "Clark County"
     ],
@@ -63,7 +67,8 @@
         "New York County"
     ],
     "OH": [
-        "Cuyahoga County"
+        "Cuyahoga County",
+        "Hamilton County"
     ],
     "OR": [
         "Kalamath County"

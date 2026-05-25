@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 # Define the paths to the data files
-DATA_DIR = 'c:/Users/macki/Documents/VS Studio Code/WisdomAI_2020/data'
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 HISTORICAL_DATA_PATH = os.path.join(DATA_DIR, 'voting_pres_data.csv')
 PREDICTION_DATA_PATH = os.path.join(DATA_DIR, 'prediction_pres_data.csv')
 
