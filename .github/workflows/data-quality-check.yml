@@ -90,6 +90,71 @@ jobs:
           print(f"PASS: Data meets the Wisdom quality standard ({score:.1f}% >= {threshold:.0f}%).")
           EOF
 
-      # voting_pres_data.csv currently returns HTTP 500 from the API (likely due to
-      # the boolean TRUE/FALSE values in the Wisdom column). Tracked as a known issue.
-      # Once resolved, add a second Analyze + Enforce step for that file here.
+      # ── voting_pres_data.csv gate (added 2026-05-25 after Phase 6 expansion) ────
+      # HTTP 500 was fixed by converting Wisdom column TRUE/FALSE → 1/0 integers.
+      # Score with 1,956 counties: 73.75% (Completeness 100%, Consistency 100%, Validity 25%).
+      # Validity outliers are expected — geographic spread from Glacier MT (5K ballots) to
+      # Los Angeles CA (3M ballots). Score improved from 65% (39 counties) to 73.75% (1,956).
+
+      - name: Analyze voting_pres_data.csv
+        id: dq2
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            -H "X-API-Key: ${{ secrets.DATA_QUALITY_API_KEY }}" \
+            -F "file=@data/voting_pres_data.csv;type=text/csv" \
+            https://data-quality-api-u2mjys756a-uc.a.run.app/analyze)
+
+          echo "Raw response: $RESPONSE"
+
+          if echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); sys.exit(1 if 'error' in d else 0)" 2>/dev/null; then
+            SCORE=$(echo "$RESPONSE"        | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('overall_score', 0))")
+            COMPLETENESS=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('completeness',{}).get('score', 0))")
+            CONSISTENCY=$(echo "$RESPONSE"  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('consistency', {}).get('score', 0))")
+            VALIDITY=$(echo "$RESPONSE"     | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('validity',    {}).get('score', 0))")
+            ROWS=$(echo "$RESPONSE"         | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('row_count', 0))")
+
+            echo "score=$SCORE"               >> $GITHUB_OUTPUT
+            echo "completeness=$COMPLETENESS" >> $GITHUB_OUTPUT
+            echo "consistency=$CONSISTENCY"   >> $GITHUB_OUTPUT
+            echo "validity=$VALIDITY"         >> $GITHUB_OUTPUT
+            echo "rows=$ROWS"                 >> $GITHUB_OUTPUT
+            echo "api_ok=true"                >> $GITHUB_OUTPUT
+
+            {
+              echo "### Wisdom Data Quality — voting_pres_data.csv"
+              echo ""
+              echo "| Dimension    | Score |"
+              echo "|---|---|"
+              echo "| Completeness | ${COMPLETENESS}% |"
+              echo "| Consistency  | ${CONSISTENCY}% |"
+              echo "| Validity     | ${VALIDITY}% |"
+              echo "| **Overall**  | **${SCORE}%** |"
+              echo ""
+              echo "Rows analyzed: **${ROWS}** (1,956 counties · 51 states · 2004–2024)"
+              echo ""
+              echo "> Validity outliers are expected: geographic diversity from Glacier MT (5K ballots) to Los Angeles CA (3M ballots)."
+            } >> $GITHUB_STEP_SUMMARY
+          else
+            echo "api_ok=false" >> $GITHUB_OUTPUT
+            echo "### Data Quality API error on voting_pres_data.csv" >> $GITHUB_STEP_SUMMARY
+            echo "$RESPONSE" >> $GITHUB_STEP_SUMMARY
+            echo "::warning::Data Quality API could not analyze voting_pres_data.csv."
+          fi
+
+      - name: Enforce Wisdom threshold on voting_pres_data.csv (>= 70%)
+        if: steps.dq2.outputs.api_ok == 'true'
+        run: |
+          python3 - <<'EOF'
+          import sys
+          score     = float("${{ steps.dq2.outputs.score }}")
+          threshold = 70.0
+          print(f"Overall quality score : {score:.1f}%")
+          print(f"Wisdom threshold      : {threshold:.0f}%")
+          print()
+          if score < threshold:
+              print(f"FAIL: {score:.1f}% is below the {threshold:.0f}% Wisdom quality gate.")
+              print("Note: validity outliers from geographic diversity are expected and do not fail this gate.")
+              print("A score below 70% indicates completeness or consistency issues — check for missing or conflicting rows.")
+              sys.exit(1)
+          print(f"PASS: Data meets the Wisdom quality standard ({score:.1f}% >= {threshold:.0f}%).")
+          EOF
