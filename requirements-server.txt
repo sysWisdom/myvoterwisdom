@@ -1,0 +1,17 @@
+# Server-only dependencies for Render.com (and any lightweight deploy).
+# faiss-cpu and sentence-transformers are intentionally excluded — they pull in
+# PyTorch (~1.5 GB) and are only needed by the local vector-store Q&A layer
+# (data/vectorStore/voterQuestions.py).  The Flask /predict endpoint uses only
+# scikit-learn + pandas and does not require a GPU or transformer model.
+#
+# For full local development (including the FAISS Q&A layer), use requirements.txt.
+
+flask==3.0.0
+flask-cors==4.0.0
+python-dotenv==1.2.1
+pandas==2.2.3
+scikit-learn==1.5.2
+imbalanced-learn==0.13.0
+numpy==2.1.3
+joblib==1.4.2
+requests==2.32.5

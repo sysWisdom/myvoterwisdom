@@ -140,11 +140,19 @@
   Domain    → syswisdom.ai already owned — using myvoter subdomain ✅
   ```
 
+> **Render build fix (2026-05-25):** First deploy failed with "Exited status 1" because
+> `requirements.txt` includes `sentence-transformers==3.4.1` which pulls in PyTorch (~1.5 GB) —
+> too large for Render's free-tier build environment.
+> **Fix:** Created `requirements-server.txt` (Flask + scikit-learn only, no FAISS/PyTorch) and
+> updated `render.yaml` `buildCommand` to use it. The vector-store Q&A layer is not served by
+> the Flask API, so no functionality is lost on Render.
+
 ### 4.2 Domain & Hosting ✅
 - [x] `syswisdom.ai` domain already owned — using subdomain `myvoter.syswisdom.ai`
 - [x] Wix DNS CNAME: `myvoter` → `syswisdom.github.io` (1hr TTL)
 - [x] GitHub Actions deploy: `.github/workflows/deploy-pages.yml` (auto-deploys `static/` on push)
 - [x] **Live at https://myvoter.syswisdom.ai** — HTTPS enforced ✅ (2026-05-25)
+- [x] Render.com backend: `requirements-server.txt` fix applied — redeploy triggered (2026-05-25)
 - ~~Set up Firebase Hosting~~ — superseded by GitHub Pages
 
 ### 4.3 Containerize the Flask App for Cloud Run
