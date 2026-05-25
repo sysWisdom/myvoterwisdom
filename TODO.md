@@ -574,13 +574,17 @@ Phase 7 goal:    aggregate county predictions → state winner → Electoral Col
 
 **Integration tasks:**
 - [x] Identify exact repository URL and verify license — MIT ✅ `https://github.com/tonmcg/US_County_Level_Election_Results_08-24`
-- [ ] Add `Source = 'county_repo'` provenance value to `voting_pres_data.csv` schema docs
-- [ ] Write validation script `tests/validate_tier3.py`:
-  - Download `2024_US_County_Level_Presidential_Results.csv` via raw GitHub URL
-  - Join to `voting_pres_data.csv` on `county_fips` (need FIPS in our data) or `(County, State, Year)`
-  - Compare `votes_dem` / `votes_gop` to MEDSL values — flag rows with > 1% divergence
-- [ ] Add `data/county_repo/` to `.gitignore` (not committed; fetched at runtime)
-- [ ] Update `DISCLAIMER.md` with Tier 3 attribution: Tony McGovern, MIT license, Zenodo DOI
+- [x] Add `Source = 'county_repo'` provenance value to `voting_pres_data.csv` schema docs
+- [x] Write validation script `tests/validate_tier3.py` ✅ 2026-05-25
+  - Downloads `{year}_US_County_Level_Presidential_Results.csv` via raw GitHub URL
+  - Caches to `data/county_repo/` (not committed)
+  - Joins to `voting_pres_data.csv` on `(normalized county name, state abbreviation, year)`
+  - Reports `dem_div` + `rep_div` per county; flags rows with > 1% divergence
+  - Exit 0 = clean, exit 1 = divergences found
+  - Supports `--threshold` and `--year` CLI args
+- [x] Add `data/county_repo/` to `.gitignore` ✅ 2026-05-25
+- [x] Update `DISCLAIMER.md` with Tier 3 attribution ✅ 2026-05-25
+  - Added "Secondary / Validation Source (Tier 3)" section with author, DOI, MIT license, usage notes
 
 ---
 

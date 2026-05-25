@@ -62,10 +62,35 @@ County-level election data was collected from official public sources including:
 
 - State Secretary of State offices and county election board websites
 - The [MIT Election Data and Science Lab (MEDSL)](https://electionlab.mit.edu/) — County Presidential Returns
+  doi:[10.7910/DVN/VOQCHQ](https://doi.org/10.7910/DVN/VOQCHQ) — License: CC BY 4.0
 - The [U.S. Election Assistance Commission (EAC)](https://www.eac.gov/) — Election Administration and Voting Survey (EAVS)
 - Individual county recorder and registrar of voters offices
 
-> **Note:** This dataset is a research sample — 39 counties across 25 states.
+### Secondary / Validation Source (Tier 3)
+
+The following dataset is used **for cross-validation and rapid prototyping only**.
+It is **not** the authoritative training source for ML models in this project.
+
+> **US County Level Election Results 2008–2024**
+> Author: Tony McGovern ([@tonmcg](https://github.com/tonmcg))
+> Repository: [github.com/tonmcg/US_County_Level_Election_Results_08-24](https://github.com/tonmcg/US_County_Level_Election_Results_08-24)
+> DOI: [10.5281/zenodo.14223604](https://doi.org/10.5281/zenodo.14223604)
+> License: **MIT** — free to use, modify, and redistribute
+> Coverage: 2008, 2012, 2016, 2020, 2024 U.S. presidential elections at the county level
+
+Data in this repository is compiled from published news-outlet sources
+(The Guardian, Townhall.com, Fox News, Politico, New York Times) and is described
+by the author as **exhaustive but not authoritative**. Researchers should verify
+specific results against official state election board records when needed.
+
+Usage in this project:
+- `tests/validate_tier3.py` downloads Tier 3 CSVs and cross-checks vote totals
+  against MEDSL data, flagging county-years with > 1% divergence
+- Downloaded files are cached in `data/county_repo/` (not committed to git)
+- `Source` column value `county_repo` identifies any rows sourced from this dataset
+
+> **Note:** This dataset is a research sample — 39 hand-curated counties (Tier 1) plus
+> 1,956 counties from MEDSL (Tier 2), across 51 states/territories, 2004–2024.
 > It is **not** a nationally representative sample. Counties were selected
 > based on data availability during the project's research phase and do not
 > represent any deliberate political, demographic, or geographic weighting.

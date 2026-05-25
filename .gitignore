@@ -36,6 +36,9 @@ model/
 # MEDSL source data — downloaded manually, not committed (9.8 MB tab file)
 data/medsl/
 
+# Tier 3 county repo — downloaded at runtime by tests/validate_tier3.py, not committed
+data/county_repo/
+
 # CSV files — block accidental commits of generated/temp CSVs
 *.csv
 # Re-allow curated data files in data/ — these are tracked and
