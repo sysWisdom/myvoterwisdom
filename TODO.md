@@ -170,10 +170,12 @@ DATA_PATH = '/content/drive/MyDrive/WisdomAI_2020/data/voting_pres_data.csv'
 
 ## Phase 5 — GitHub Open-Source Release
 
-- [ ] Make the GitHub repo **public**: `sysWisdom/myvoterwisdom`
+- [x] Make the GitHub repo **public**: `sysWisdom/myvoterwisdom` ✅ Done
 - [ ] Add GitHub Topics: `election-data`, `open-data`, `civic-tech`, `machine-learning`, `education`
-- [ ] Enable GitHub Discussions for community questions
-- [ ] Add GitHub Actions CI to run tests on push (`tests/verify_wisdom.py`, etc.)
+  - Go to github.com/sysWisdom/myvoterwisdom → gear icon next to "About" → add topics
+- [ ] Enable GitHub Discussions
+  - Settings → Features → check "Discussions"
+- [x] Add GitHub Actions CI — `.github/workflows/ci.yml` runs 3 tests on every push/PR
 - [ ] Consider adding to [Code for America Brigade](https://brigade.codeforamerica.org/) or similar civic tech networks
 
 ---

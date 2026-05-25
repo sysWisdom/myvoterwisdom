@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── unittest suite ────────────────────────────────────────────────────
+      - name: test — main_vote2028 prediction (Orange County, CA)
+        run: python -m unittest tests/testMain2028.py -v
+
+      # ── preprocessing pipeline checks ────────────────────────────────────
+      - name: test — Wisdom column distribution
+        run: python tests/verify_wisdom.py
+
+      - name: test — preprocessing pipeline
+        run: python tests/verify_preprocessing.py
+
+      # incompletness.py is a random-sleep simulation utility (10 s),
+      # not a correctness test — excluded from CI.
