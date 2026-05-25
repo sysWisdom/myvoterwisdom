@@ -209,10 +209,19 @@
   - Calls SysWisdom Data Quality API (`prediction_pres_data.csv`)
   - Fails merge if overall score < 70% (Completeness + Consistency + Validity)
   - API key stored as GitHub Actions secret `DATA_QUALITY_API_KEY` (never in code)
-  - ⚠️ **Action required**: add `DATA_QUALITY_API_KEY` to repo Settings → Secrets → Actions
+  - ✅ `DATA_QUALITY_API_KEY` added to repo Settings → Secrets → Actions (2026-05-25)
   - ⚠️ Known: `voting_pres_data.csv` returns HTTP 500 from DQ API (boolean Wisdom column) — gate covers `prediction_pres_data.csv` only until resolved
 - [x] Updated `.gitignore` — `data/*.csv` and `data/reasoning/*.csv` explicitly allowed so contributors can submit new data via PR
-- [ ] Consider adding to [Code for America Brigade](https://brigade.codeforamerica.org/) or similar civic tech networks
+- [x] **Civic Tech Discovery** — researched Code for America Brigade and similar networks (2026-05-25)
+  - **GitHub `civic-tech` topic** ✅ already set — repo appears in github.com/topics/civic-tech (1,296+ repos, auto-indexed)
+  - **Code for America Brigade index** — requires being a registered Brigade *organization* (not for individual projects); not applicable
+  - **Civic Tech Index (civictechindex.org)** — auto-crawls GitHub repos tagged `civic-tech`; already covered by existing topic ✅
+  - **Recommended next steps** (manual, no code changes needed):
+    - [ ] Add additional GitHub topics for election discoverability: `voter-turnout`, `us-elections`, `election-prediction`, `political-data`
+      - Go to https://github.com/sysWisdom/myvoterwisdom → gear icon → Manage topics
+    - [ ] Post in [Code for America Slack](https://cfa.slack.com) `#civic-tech` channel with project link and one-line summary
+    - [ ] Submit to [Democracy Lab](https://www.democracylab.org/projects/create) — civic tech project directory, free listing
+    - [ ] Consider submitting to [Awesome Civic Tech](https://github.com/topics/awesome-civic-tech) curated lists via PR
 
 ---
 
