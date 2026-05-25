@@ -26,17 +26,9 @@ _dq_cache = {}
 
 
 def _ensure_model():
-    """Train the RF model if it hasn't been trained yet (first deploy or cold start)."""
-    model_path = os.path.join(_ROOT, 'model', 'rf_vote_model.pkl')
-    if not os.path.exists(model_path):
-        print('Model not found — training now...')
-        os.makedirs(os.path.join(_ROOT, 'model'), exist_ok=True)
-        from train_model import train_and_save_model
-        train_and_save_model(
-            os.path.join(_ROOT, 'data', 'voting_pres_data.csv'),
-            model_path,
-        )
-        print('Model trained and saved.')
+    """Pre-warm the global model cache so the first predict request is fast."""
+    from main_vote2028 import preload_models
+    preload_models()
 
 
 _ensure_model()
