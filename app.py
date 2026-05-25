@@ -3,6 +3,7 @@ from flask_cors import CORS
 import json
 import os
 import sys
+import requests as http_client
 from dotenv import load_dotenv
 
 load_dotenv()  # reads .env if present; no-op in production where env vars are set directly
@@ -18,6 +19,10 @@ CORS(app, origins=[
 ])
 
 _ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Simple process-level cache so we don't hammer the paid API on every page load.
+# Reset by restarting the server.
+_dq_cache = {}
 
 
 def _ensure_model():
@@ -63,6 +68,40 @@ def predict():
     except Exception as e:
         print(f"Exception occurred: {e}")
         return jsonify({"error": "An error occurred", "details": str(e)}), 500
+
+@app.route('/data-quality', methods=['GET'])
+def data_quality():
+    """Proxy to the SysWisdom Data Quality API. Key never leaves the server."""
+    if 'result' in _dq_cache:
+        result = dict(_dq_cache['result'])
+        result['cached'] = True
+        return jsonify(result)
+
+    api_key = os.environ.get('DATA_QUALITY_API_KEY')
+    if not api_key:
+        return jsonify({'error': 'Data Quality API not configured on this server'}), 503
+
+    csv_path = os.path.join(_ROOT, 'data', 'prediction_pres_data.csv')
+    if not os.path.exists(csv_path):
+        return jsonify({'error': 'Prediction data file not found'}), 404
+
+    try:
+        with open(csv_path, 'rb') as f:
+            resp = http_client.post(
+                'https://data-quality-api-u2mjys756a-uc.a.run.app/analyze',
+                headers={'X-API-Key': api_key},
+                files={'file': ('prediction_pres_data.csv', f, 'text/csv')},
+                timeout=30,
+            )
+        resp.raise_for_status()
+        result = resp.json()
+        _dq_cache['result'] = result
+        return jsonify(result)
+    except http_client.RequestException as e:
+        return jsonify({'error': 'Data Quality API unreachable', 'details': str(e)}), 502
+    except Exception as e:
+        return jsonify({'error': 'Unexpected error', 'details': str(e)}), 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

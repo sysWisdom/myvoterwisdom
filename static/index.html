@@ -142,6 +142,33 @@
         .about-item .icon { font-size: 1.6rem; margin-bottom: 6px; }
         .about-item p { font-size: .8rem; color: var(--muted); margin-top: 4px; }
 
+        /* DATA QUALITY */
+        .dq-score-wrap  { text-align: center; margin-bottom: 20px; }
+        .dq-score-big   { font-size: 3.5rem; font-weight: 800; line-height: 1; }
+        .dq-score-label { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+        .dq-dims        { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+        .dq-dim-row     { display: grid; grid-template-columns: 110px 1fr 50px; align-items: center; gap: 10px; }
+        .dq-dim-label   { font-size: .85rem; font-weight: 600; text-align: right; }
+        .dq-bar-track   { background: #e5e7eb; border-radius: 6px; height: 10px; overflow: hidden; }
+        .dq-bar-fill    { height: 100%; border-radius: 6px; transition: width .6s ease; }
+        .dq-dim-pct     { font-size: .85rem; font-weight: 700; }
+        .dq-issues      { margin-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+        .dq-issue-item  { font-size: .8rem; color: #92400e; background: #fef3c7; border-radius: 6px; padding: 6px 10px; }
+        .dq-cached-note { font-size: .75rem; color: var(--muted); font-style: italic; margin-top: 10px; }
+        .dq-btn {
+            padding: 10px 22px;
+            background: var(--green);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: .95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .dq-btn:hover     { background: #047857; }
+        .dq-btn:disabled  { background: #9ca3af; cursor: not-allowed; }
+
         /* FOOTER */
         footer { background: var(--dark); color: #9ca3af; text-align: center; padding: 24px; font-size: .85rem; }
         footer a { color: #a5b4fc; text-decoration: none; }
@@ -246,6 +273,19 @@
                 <span class="colab-badge">Open in Colab</span>
             </a>
         </div>
+    </div>
+
+    <!-- DATA QUALITY SCORE -->
+    <div class="card">
+        <h2>&#x2705; Dataset Quality Score</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
+            Validates <code>prediction_pres_data.csv</code> against the Wisdom Formula dimensions
+            using the <a href="https://www.syswisdom.ai/data-quality-score" target="_blank" style="color:var(--blue)">SysWisdom Data Quality API</a>.
+            The API key stays on the server &mdash; it is never exposed to your browser.
+        </p>
+        <button id="runDQCheck" class="dq-btn">&#x1F50D; Check Data Quality</button>
+        <p id="dq-loading" style="display:none;margin-top:12px;font-style:italic;color:var(--muted)">Analyzing prediction dataset&hellip;</p>
+        <div id="dq-result" style="display:none;margin-top:20px"></div>
     </div>
 
     <!-- ABOUT -->
@@ -399,6 +439,91 @@
 
         resultEl.style.display = 'block';
         resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Data Quality Score ────────────────────────────────────────────────────
+    const dqBtn    = document.getElementById('runDQCheck');
+    const dqLoad   = document.getElementById('dq-loading');
+    const dqResult = document.getElementById('dq-result');
+
+    dqBtn.addEventListener('click', () => {
+        dqBtn.disabled = true;
+        dqLoad.style.display = 'block';
+        dqResult.style.display = 'none';
+
+        fetch(`${API_BASE}/data-quality`)
+            .then(r => r.json())
+            .then(data => {
+                dqLoad.style.display = 'none';
+                dqBtn.disabled = false;
+                if (data.error) {
+                    dqResult.innerHTML = `<p style="color:#dc2626">&#x26A0;&#xFE0F; ${data.error}</p>`;
+                } else {
+                    renderDQ(data);
+                }
+                dqResult.style.display = 'block';
+            })
+            .catch(err => {
+                dqLoad.style.display = 'none';
+                dqBtn.disabled = false;
+                dqResult.innerHTML = '<p style="color:#dc2626">&#x26A0;&#xFE0F; Service unavailable &mdash; the server may be warming up. Try again in a moment.</p>';
+                dqResult.style.display = 'block';
+                console.error(err);
+            });
+    });
+
+    function renderDQ(data) {
+        const score = data.overall_score ?? null;
+        const dims  = [
+            { label: 'Completeness', value: data.completeness?.score ?? null },
+            { label: 'Consistency',  value: data.consistency?.score  ?? null },
+            { label: 'Validity',     value: data.validity?.score     ?? null },
+        ];
+        const scoreColor = s => s >= 80 ? '#059669' : s >= 60 ? '#d97706' : '#dc2626';
+        let html = '';
+
+        if (score !== null) {
+            html += `
+                <div class="dq-score-wrap">
+                    <div class="dq-score-big" style="color:${scoreColor(score)}">${score.toFixed(1)}<span style="font-size:1.5rem">%</span></div>
+                    <div class="dq-score-label">Overall Quality Score &mdash; ${data.row_count} rows &times; ${data.column_count} columns</div>
+                </div>`;
+        }
+
+        html += '<div class="dq-dims">';
+        dims.forEach(({label, value}) => {
+            if (value === null) return;
+            const pct = Math.round(value);
+            html += `
+                <div class="dq-dim-row">
+                    <span class="dq-dim-label">${label}</span>
+                    <div class="dq-bar-track"><div class="dq-bar-fill" style="width:${pct}%;background:${scoreColor(pct)}"></div></div>
+                    <span class="dq-dim-pct" style="color:${scoreColor(pct)}">${pct}%</span>
+                </div>`;
+        });
+        html += '</div>';
+
+        const issues = [
+            ...(data.completeness?.critical_missing || []),
+            ...(data.consistency?.issues            || []),
+            ...(data.validity?.validity_checks      || []),
+        ];
+        if (issues.length > 0) {
+            html += '<div class="dq-issues">';
+            issues.forEach(issue => {
+                const text = typeof issue === 'string'
+                    ? issue
+                    : `<strong>${issue.column}:</strong> ${issue.issue}`;
+                html += `<div class="dq-issue-item">&#x26A0;&#xFE0F; ${text}</div>`;
+            });
+            html += '</div>';
+        }
+
+        if (data.cached) {
+            html += '<p class="dq-cached-note">&#x1F4BE; Cached result &mdash; restart server to refresh</p>';
+        }
+
+        dqResult.innerHTML = html;
     }
 </script>
 </body>
