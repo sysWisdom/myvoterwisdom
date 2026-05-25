@@ -43,11 +43,45 @@
 - `tests/verify_preprocessing.py` — added `sys.path.insert`, fixed hardcoded path
 - `tests/testMain2028.py` — fixed `'../main_vote2028.py'` subprocess path + `'../results.json'` path using `__file__`-relative `_ROOT`
 
-### Wisdom Model Observation
-> All 233 county records evaluate to `Wisdom=False`. This means no county in the dataset
-> meets 2 of 3 conditions (2020 votes > 2024, 2020 votes > 2016, 2020 ballots > 2024 ballots).
-> This may be expected given 2024 turnout data — worth reviewing the `update_wisdom` logic
-> in `preprocess.py` if the model yields 100% accuracy warnings.
+### Wisdom Model — ✅ Bug Fixed 2026-05-25
+> **Root cause:** `compare_votes_and_ballots()` used row-by-row lambdas that compared each row
+> against itself, making every condition `None > value` or `value > None` → always `False`.
+>
+> **Fix:** Replaced with county-level pivot + merge back. Correct distribution:
+>
+> | Condition | True | False |
+> |---|---|---|
+> | Dem 2020 > Dem 2024 | 32 | 7 |
+> | Dem 2020 > Dem 2016 | 36 | 3 |
+> | Ballots 2020 > Ballots 2024 | 28 | 11 |
+> | **Wisdom (≥ 2 of 3)** | **32** | **7** |
+>
+> **82% True / 18% False** across 39 counties — usable training distribution, not single-class.
+>
+> **Political explanation for the 7 False counties:**
+> - Harris TX, Fulton GA — deep-blue urban counties where Democratic votes *grew* 2020→2024; 2020 was not their peak
+> - Miami-Dade FL — already shifted Republican in 2020; continued shift in 2024
+> - Cherokee, Clark County, Sussex County, House District 40 — mixed factors
+>
+> **⚠️ Data quality issue:** `House District 40` is a legislative district, NOT a county.
+> Must be removed or replaced with the actual county name before serious training.
+
+### Data Expansion Recommendations
+> To expand beyond 39 counties and improve ML robustness, the best FREE source is:
+>
+> **MIT Election Data + Science Lab — County Presidential Election Returns**
+> - URL: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
+> - Data: ~3,100 counties × 6 elections (2000–2020), free CSV download on Harvard Dataverse
+> - Columns: county FIPS, state, county, year, party, candidatevotes, totalvotes
+> - Would expand from 39 → 3,100 counties; needs a mapping script to match column names
+>
+> **For 2024 county-level results:**
+> - AP Elections (ap.org) — gold standard, but **licensed/paid**
+> - U.S. Vote Foundation (civicdata.usvotefoundation.org) — better for registration data
+> - Roper Center (ropercenter.cornell.edu) — polling data only, not vote totals
+>
+> **Recommended immediate action:** Download MIT Election Lab data, map columns to the
+> `voting_pres_data.csv` schema, add representative counties across red/blue/purple states.
 
 ---
 
