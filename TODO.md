@@ -61,10 +61,47 @@
 > **Political explanation for the 7 False counties:**
 > - Harris TX, Fulton GA — deep-blue urban counties where Democratic votes *grew* 2020→2024; 2020 was not their peak
 > - Miami-Dade FL — already shifted Republican in 2020; continued shift in 2024
-> - Cherokee, Clark County, Sussex County, House District 40 — mixed factors
+> - Cherokee, Clark County, Sussex County — mixed swing-county factors
+> - **House District 40 (AK)** — see Alaska Borough Note below
+
+### ⚠️ Alaska Geographic Unit — Requires Resolution
+> **Background:** Alaska does not have counties. When Alaska drafted its constitution (1955–1956
+> Constitutional Convention), delegates intentionally rejected the county system to avoid overlapping
+> tax jurisdictions, government duplication, and rigid boundaries in a sparsely populated state with
+> vast undeveloped regions and subsistence-based communities. Congress had also legally restricted
+> territorial Alaska from creating counties since 1912, at the lobbying of major mining and fishing
+> corporations who preferred federal land control over regional taxation.
 >
-> **⚠️ Data quality issue:** `House District 40` is a legislative district, NOT a county.
-> Must be removed or replaced with the actual county name before serious training.
+> **Alaska's system instead:**
+> - **19 Organized Boroughs** — function like counties for regional services (schools, zoning)
+>   but cover immense geographic areas (e.g. Matanuska-Susitna Borough is larger than West Virginia)
+> - **The Unorganized Borough** — over half of Alaska's landmass, no regional government;
+>   state government (Alaska State Troopers, etc.) provides basic services directly
+>
+> **Current data entry:** `House District 40` (AK) is a **state legislative district**, not a borough.
+> Alaska House District 40 data in the CSV:
+>
+> | Year | Registered | Ballots | Dem | Rep |
+> |---|---|---|---|---|
+> | 2024 | 9,108 | 3,362 | 1,362 | 1,688 |
+> | 2020 | 10,118 | 4,677 | 1,194 | 2,318 |
+> | 2016 | 9,412 | 3,816 | 2,338 | 1,377 |
+> | 2008 | 8,666 | 5,029 | 2,137 | 2,686 |
+> | 2004 | 8,525 | 5,836 | 2,328 | 3,217 |
+>
+> Small registration (~9,000), rural voting pattern, and the 2016 Democratic lean suggest this is
+> a rural district in the **Matanuska-Susitna Borough** (Mat-Su Valley, north of Anchorage).
+>
+> **Resolution options (choose one):**
+> - [ ] **Option A — Rename to borough:** Change `County` field from `House District 40` to
+>   `Matanuska-Susitna Borough` (verify HD40 boundary → borough mapping first)
+> - [ ] **Option B — Replace with full borough data:** Pull Matanuska-Susitna Borough presidential
+>   results 2004–2024 from Alaska Division of Elections and replace the 5 rows
+> - [ ] **Option C — Exclude Alaska:** Remove the 5 rows and note in DISCLAIMER.md that Alaska
+>   uses boroughs, not counties, and is excluded from v1.0 of the dataset
+>
+> **Recommended:** Option B — full borough data gives the correct geographic unit and more
+> representative vote totals. Alaska Division of Elections: https://www.elections.alaska.gov
 
 ### Data Expansion Recommendations
 > To expand beyond 39 counties and improve ML robustness, the best FREE source is:
