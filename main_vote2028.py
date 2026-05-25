@@ -87,7 +87,7 @@ def _build_features(df: pd.DataFrame):
 
 def _train_global_models():
     """Load data, train all four models, populate the module cache."""
-    print("Loading data for global model training...")
+    print("Loading data for global model training...", file=sys.stderr)
     df = load_data(_DATA_PATH)
     if df is None:
         raise RuntimeError("Failed to load voting data")
@@ -119,13 +119,13 @@ def _train_global_models():
     reports = {}
 
     for name, (model, Xtr, Xte) in model_specs.items():
-        print(f"  Training {name}...")
+        print(f"  Training {name}...", file=sys.stderr)
         model.fit(Xtr, y_train)
         y_pred = model.predict(Xte)
         report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
         reports[name] = _serialise_report(report)
         fitted_models[name] = model
-        print(f"    accuracy = {reports[name].get('accuracy', 'N/A'):.3f}")
+        print(f"    accuracy = {reports[name].get('accuracy', 'N/A'):.3f}", file=sys.stderr)
 
     # Populate cache
     _cache["models"]       = fitted_models
@@ -136,7 +136,7 @@ def _train_global_models():
     _cache["df_raw"]       = df_clean
 
     n_counties = df_clean['County'].nunique()
-    print(f"Global model ready â€” {len(df_clean):,} rows, {n_counties:,} counties.")
+    print(f"Global model ready -- {len(df_clean):,} rows, {n_counties:,} counties.", file=sys.stderr)
 
 
 def _serialise_report(report: dict) -> dict:
@@ -216,7 +216,7 @@ def main(county_name: str, state_name: str) -> dict:
         try:
             pred = int(model.predict(target_by_model[name])[0])
         except Exception as e:
-            print(f"Prediction error ({name}): {e}")
+            print(f"Prediction error ({name}): {e}", file=sys.stderr)
             pred = 0
         predictions[name] = [pred]
 

@@ -25,13 +25,11 @@ class TestMain2028(unittest.TestCase):
         # Check if the script ran successfully
         self.assertEqual(result.returncode, 0, f"Script failed with error: {result.stderr}")
 
-        # Verify that results.json was created
-        results_path = os.path.join(_ROOT, 'results.json')
-        self.assertTrue(os.path.exists(results_path), "results.json file was not created")
-
-        # Load the results.json file
-        with open(results_path, 'r') as f:
-            output = json.load(f)
+        # Parse the JSON printed to stdout (main_vote2028.py prints result dict, does not write results.json)
+        try:
+            output = json.loads(result.stdout)
+        except json.JSONDecodeError as e:
+            self.fail(f"Script stdout was not valid JSON: {e}\nstdout: {result.stdout[:500]}")
 
         # Verify the structure of the output
         self.assertIn("classification_reports", output, "Output missing 'classification_reports'")
