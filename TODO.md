@@ -391,6 +391,70 @@ Add a `Source` column to `voting_pres_data.csv`:
 | 2004–2024 date range | ✅ MEDSL covers 2000–2020; 2024 data from Dave's Redistricting or Ballotpedia if not yet in MEDSL |
 | Wisdom flag logic unchanged | ✅ Same 3-condition pivot logic; just applied to larger dataset |
 
+### Does the Global Model Shift the Project Dynamic? — No.
+
+> **Review question (2026-05-25):** "Elections have the popular vote and the electoral college.
+> Counties matter. Will a global model shift the dynamic of this project?"
+
+Both the per-county and global model answer the same question:
+**"Will this county give a plurality to the Democratic or Republican presidential candidate?"**
+
+The only difference is the statistical basis:
+
+| | Per-county (current) | Global model (Phase 6) |
+|---|---|---|
+| Basis for Fulton GA prediction | 6 rows, always Dem → lookup, not a model | Cross-county patterns from 18,600 rows |
+| Basis for Orange County CA | 4 train / 1-2 test → 100% accuracy is an artifact | Proper 80/20 split, statistically valid |
+| What it learns | Nothing — memorizes 6 points | Why similar counties vote how they do |
+| Educational value | "Fulton has always been Dem" | "Counties with these features tend to shift" |
+
+**The Electoral College argument supports the global model:**
+Counties are the atom of presidential elections: `Voters → Counties → States → Electoral College`.
+The EC is won by flipping states, states are flipped by flipping swing counties.
+A global model trained on all 3,100 counties can identify which counties have structurally
+flippable characteristics — that is the educational insight the project exists to deliver.
+
+**What would genuinely shift the mandate:**
+- Adding demographic/Census features → models *why* people vote, not just *how* they have
+- Adding live polling or forecasting data → shifts from historical analysis to live prediction
+- Aggregating county → state → 270 Electoral College map → extends scope (see Phase 7 below)
+
+---
+
+## Phase 7 — Electoral College Aggregation (Natural Extension of Phase 6)
+
+> **Prerequisite:** Phase 6 (global model + full county dataset) must be complete first.
+> This phase does NOT change the project mandate — it completes the story from county to outcome.
+
+### The Chain: County → State → Electoral College
+
+```
+Phase 6 output:  county prediction (Dem win = 1 / Rep win = 0)
+Phase 7 goal:    aggregate county predictions → state winner → Electoral College map
+```
+
+**State-level aggregation logic (population-weighted):**
+1. For each state, sum `Democratic Votes` and `Republican Votes` across all predicted counties
+2. State goes Dem if projected Dem total > projected Rep total
+3. Map state winners to their Electoral College vote counts (fixed, from U.S. Constitution + Census apportionment)
+4. Sum to 270-threshold check
+
+**What this adds to the UI:**
+- A national map showing projected state-by-state outcomes
+- An Electoral College vote tally (e.g. "Dem 312 / Rep 226")
+- A "swing county" highlight: counties where the projected margin is < 5 percentage points
+
+**Mandate compliance:**
+- Still 100% historical data (no polling, no forecasting)
+- Non-partisan: applies identical logic to all states
+- Educational: shows students how county-level data connects to national outcomes
+- The EC map shows what the data *suggests*, labeled clearly as a historical-data projection
+
+**Data needed:**
+- [ ] Electoral College votes per state (fixed table — from archives.gov or Wikipedia)
+- [ ] County-to-state mapping (already in MEDSL via `state_po` column)
+- [ ] 2020 Census county population (for population-weighted aggregation) — free from Census Bureau API
+
 ---
 
 ## Quick Wins (Do These First)
