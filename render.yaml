@@ -1,7 +1,7 @@
 services:
   - type: web
     name: myvoterwisdom
-    env: python
+    runtime: python
     region: oregon
     plan: free
     buildCommand: pip install -r requirements-server.txt
