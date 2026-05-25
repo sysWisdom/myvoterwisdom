@@ -19,7 +19,7 @@ def main(county_name, state_name):
     data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'voting_pres_data.csv')
     df = load_data(data_path)
     if df is None:
-        return
+        return {"message": "Failed to load data"}
 
     # Filter for the selected county and state
     county_data = df[(df['County'] == county_name) & (df['State'] == state_name)].copy()
@@ -28,21 +28,11 @@ def main(county_name, state_name):
     required_columns = ['Democratic Votes', 'Republican Votes', 'Total Voted', 'Total Ballots Cast']
     for col in required_columns:
         if col not in county_data.columns:
-            results = {
-                "message": f"Missing column: {col} in the data for {county_name}, {state_name}"
-            }
-            with open('results.json', 'w') as f:
-                json.dump(results, f, indent=4)
-            return
+            return {"message": f"Missing column: {col} in the data for {county_name}, {state_name}"}
 
     # Check if the filtered data is empty
     if county_data.empty:
-        results = {
-            "message": f"No data found for {county_name}, {state_name}"
-        }
-        with open('results.json', 'w') as f:
-            json.dump(results, f, indent=4)
-        return
+        return {"message": f"No data found for {county_name}, {state_name}"}
 
     # Apply preprocessing functions
     county_data = add_filter_columns(county_data)
@@ -61,15 +51,11 @@ def main(county_name, state_name):
     if len(county_data['Democratic Wins'].unique()) < 2:
         # Determine the likely winner
         likely_winner = "Democratic" if county_data['Democratic Wins'].iloc[0] == 1 else "Republican"
-        # Output a message indicating the high accuracy
-        results = {
+        return {
             "message": f"The data contains only one class, indicating high accuracy for {county_name}, {state_name}. A {likely_winner} candidate is 100% likely to win the county.",
             "classification_reports": {},
             "predictions": {}
         }
-        with open('results.json', 'w') as f:
-            json.dump(results, f, indent=4)
-        return
 
     # Prepare the features (X) and target (y)
     X = county_data[['Democratic Vote Share', 'Republican Vote Share', 'Turnout']]
@@ -98,16 +84,13 @@ def main(county_name, state_name):
         # Debugging information
         print(f"Likely Winner: {likely_winner}, Likely Winner Probability: {likely_winner_prob}")
         
-        results = {
+        return {
             "message": f"The least populated class in the data for {county_name}, {state_name} has only {class_counts.min()} member(s), which is too few. Using Laplace Law of Succession: Winner {likely_winner} with probability {likely_winner_prob:.2f}%",
             "likely_winner": likely_winner,
             "likely_winner_prob": likely_winner_prob,
             "classification_reports": {},
             "predictions": {}
         }
-        with open('results.json', 'w') as f:
-            json.dump(results, f, indent=4)
-        return
 
     # Apply SMOTE only if there are enough samples
     if class_counts.min() > 1:
@@ -160,10 +143,7 @@ def main(county_name, state_name):
         except Exception as e:
             print(f"Error training {model_name} model: {e}")
 
-    # Output results as JSON
-    with open('results.json', 'w') as f:
-        json.dump(results, f, indent=4)
-    print("Results written to results.json")
+    return results
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
@@ -171,4 +151,8 @@ if __name__ == "__main__":
         sys.exit(1)
     county_name = sys.argv[1]
     state_name = sys.argv[2]
-    main(county_name, state_name)
+    output = main(county_name, state_name)
+    if output:
+        with open('results.json', 'w') as f:
+            json.dump(output, f, indent=4)
+        print("Results written to results.json")
